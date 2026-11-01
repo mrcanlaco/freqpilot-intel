@@ -1,0 +1,28 @@
+[project]
+name = "freqpilot-intel"
+version = "0.1.0"
+description = "Evidence-first public Binance Square research dashboard"
+requires-python = ">=3.11"
+dependencies = []
+license = "AGPL-3.0-only"
+readme = "README.md"
+
+[project.urls]
+Homepage = "https://intel.freqpilot.dev"
+Repository = "https://github.com/mrcanlaco/freqpilot-intel"
+
+[project.scripts]
+bti = "bti.cli:main"
+
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

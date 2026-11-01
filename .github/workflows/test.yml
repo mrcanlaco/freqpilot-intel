@@ -1,0 +1,41 @@
+name: Test
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Prepare empty local configuration (no collection)
+        run: python scripts/bootstrap.py --config-only
+      - name: Compile Python and check JavaScript
+        run: |
+          python -m compileall -q src tests
+          node --check src/bti/static/app.js
+          node --check src/bti/static/workspace.js
+      - name: Browser workspace privacy, persistence and migration regressions
+        run: node --test tests/test_workspace.js
+      - name: Unit, integration, semantics and privacy regression
+        env:
+          PYTHONPATH: src
+        run: python -m unittest discover -s tests -v
+      - name: Lightweight MSI executor protocol and Linux resource bounds
+        run: python ops/msi-fetch-worker/test_executor.py
+      - name: Hybrid shared authority and supervisor cadence
+        env:
+          PYTHONPATH: src
+        run: |
+          python ops/msi-fetch-worker/test_bridge.py
+          python ops/msi-fetch-worker/test_supervisor_interval.py
+          python ops/msi-fetch-worker/test_transport.py

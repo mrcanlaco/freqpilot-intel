@@ -1,0 +1,4 @@
+{
+  "ssh_host": "your-worker-alias",
+  "wsl_distribution": "YourLinuxDistribution"
+}

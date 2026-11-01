@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Future Intelligence (intel.freqpilot.dev) — Đọc nguồn công khai, đối chiếu bằng chứng Futures &amp; Copy Trading và xây dựng nghiên cứu riêng từ hệ sinh thái Binance.">
+  <title>Khám phá · Future Intelligence</title>
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <a class="skip-link" href="#bai-viet">Đến nội dung chính</a>
+  <header class="topbar">
+    <a class="brand" href="#bai-viet" aria-label="Future Intelligence · intel.freqpilot.dev"><span class="brand-mark" aria-hidden="true">◈</span><span><b>FUTURE INTELLIGENCE</b><small>Đối chiếu bằng chứng Futures &amp; Copy Trading từ nguồn công khai</small></span></a>
+    <div class="topbar-status" role="status"><span class="live-dot"></span><span id="header-status">Kho công khai · Chỉ đọc</span></div>
+    <div class="topbar-actions"><button type="button" class="vi-priority-toggle" id="top-vi-priority-btn" title="Ưu tiên bài gốc Tiếng Việt, không tự dịch">Tiếng Việt trước</button></div>
+  </header>
+  <div class="layout">
+    <aside class="sidebar" aria-label="Điều hướng chính">
+      <p class="nav-label">Không gian làm việc</p>
+      <nav aria-label="Chức năng chính">
+        <a href="#bai-viet" class="nav-item active" data-view="bai-viet" aria-current="page"><span aria-hidden="true">◫</span>Khám phá</a>
+        <a href="#ho-so" class="nav-item" data-view="ho-so"><span aria-hidden="true">◎</span>Nguồn</a>
+        <a href="#workspace" class="nav-item" data-view="workspace"><span aria-hidden="true">▤</span>Nghiên cứu</a>
+        <a href="#moi" class="nav-item" data-view="moi"><span aria-hidden="true">↻</span>Theo dõi</a>
+        <a href="#nguon" class="nav-item" data-view="nguon"><span aria-hidden="true">◇</span>Thêm</a>
+      </nav>
+      <div class="guardrail"><b>Đọc để đối chiếu</b><p>Tương tác và giải nội dung không chứng minh lợi nhuận. Không giao dịch tự động.</p><a href="#cam-nang">Cách đọc bằng chứng →</a></div>
+    </aside>
+    <main id="main-content">
+      <section class="panel" id="campaign-snapshots" data-page="discover" aria-labelledby="campaign-snapshots-title">
+        <h2 id="campaign-snapshots-title">Hồ sơ và nghiên cứu Future &amp; Copy Trading</h2>
+        <p>Đối chiếu hồ sơ liên kết, phương pháp tác giả tự công bố và số liệu danh mục; tách khỏi thứ hạng bình chọn Blockchain 100. Các báo cáo là bản chụp có thời điểm và giới hạn bằng chứng, không tự cập nhật hoặc xác minh kỹ năng sinh lời.</p>
+        <div class="workspace-toolbar"><a class="hero-btn primary" href="/research/methods">Hồ sơ và phương pháp</a><a class="hero-btn secondary" href="/research/portfolios">Phân tích ba portfolio</a><a class="hero-btn secondary" href="/blockchain100/2026">Đề cử 2026</a><a class="hero-btn secondary" href="/blockchain100/2025">Hồ sơ và hoạt động 2025</a></div>
+      </section>
+      <section class="page-intro" id="tong-quan" data-page="discover">
+        <div><h1>Future Intelligence · Khám phá nội dung</h1><p>Tìm câu nguồn, đối chiếu điều kiện giao dịch và lập nghiên cứu riêng dựa trên bằng chứng.</p></div>
+      </section>
+      <div class="discover-layout" data-page="discover">
+        <section class="content-section" id="bai-viet" aria-label="Tìm và đọc bài viết" tabindex="-1">
+          <form class="research-controls article-controls-grid" id="article-controls">
+            <input type="hidden" name="entity" value="">
+            <div class="search-row"><label>Tìm bài viết<input name="q" type="search" placeholder="BTC, quản trị rủi ro, thanh khoản…" aria-label="Tìm bài viết"></label><button type="submit">Tìm bài</button></div>
+            <div class="basic-filter-row">
+              <label>Chủ đề<select name="topic" id="article-topic-select"><option value="">Tất cả chủ đề</option><option value="risk">Quản trị rủi ro</option><option value="structure">Cấu trúc giá</option><option value="macro">Vĩ mô và dòng tiền</option><option value="strategy">Chiến lược và kỷ luật</option><option value="psychology">Tâm lý giao dịch</option><option value="ecosystem">Hệ sinh thái</option></select></label>
+              <label>Ngôn ngữ<select name="lang" id="article-lang-select"><option value="">Tất cả</option><option value="vi_first">Tiếng Việt trước</option><option value="vi">Chỉ bài gốc Tiếng Việt</option><option value="en">Tiếng Anh</option><option value="zh">Tiếng Trung</option><option value="other">Ngôn ngữ khác</option></select></label>
+            </div>
+            <details class="filter-details"><summary>Bộ lọc khác</summary><div class="advanced-filter-grid">
+              <label>Tác giả<input name="author" placeholder="Tên tác giả…"></label>
+              <label>Tài sản<input name="asset" id="article-asset-input" placeholder="BTC, ETH…"></label>
+              <label>Căn cứ nghiên cứu<select name="basis"><option value="all">Tất cả bài công khai</option><option value="quoted">Có câu trích từ thân bài</option><option value="condition">Có mốc kích hoạt / vô hiệu</option></select></label>
+              <label>Nhóm tác giả<select name="cohort"><option value="all">Tất cả nguồn</option><option value="trader_awardees">Trader Awardee · giải nội dung</option></select></label>
+              <label>Sàng lọc kỹ thuật<select name="quality_only"><option value="">Tất cả bài được phép công khai</option><option value="1">Qua sàng lọc kỹ thuật v2</option></select></label>
+              <label>Từ ngày (UTC)<input name="date_from" type="date"></label>
+              <label>Đến ngày (UTC)<input name="date_to" type="date"></label>
+              <label>Sắp xếp<select name="sort"><option value="research">Điều kiện & câu nguồn trước</option><option value="latest">Mới xuất bản nhất</option><option value="likes">Nhiều lượt thích</option><option value="comments">Nhiều bình luận</option><option value="shares">Nhiều lượt chia sẻ</option><option value="views">Nhiều lượt xem</option><option value="total_interactions">Tổng tương tác đủ dữ liệu</option></select></label>
+              <button type="button" class="reset-filter-btn" id="article-reset-btn">Đặt lại bộ lọc</button>
+            </div></details>
+          </form>
+          <div class="quick-discovery" id="usecase-flow-grid" aria-label="Lối tắt khám phá">
+            <button type="button" class="filter-chip usecase-card" data-flow="vi-native">Tiếng Việt gốc</button>
+            <button type="button" class="filter-chip usecase-card" data-flow="source-claims">Có câu nguồn</button>
+            <button type="button" class="filter-chip usecase-card" data-flow="saved-bookmarks">Đã lưu (<span id="saved-count-badge">0</span>)</button>
+          </div>
+          <div class="active-filter-bar" id="article-active-filters" hidden></div>
+          <p class="sample-note" id="article-sample" role="status">Đang tìm bài trong kho công khai…</p>
+          <div class="article-grid" id="article-grid" aria-live="polite"><article class="panel skeleton"><p>Đang tải bài viết…</p></article></div>
+          <div class="pagination-bar" id="article-pagination" hidden></div>
+          <details class="secondary-disclosure" id="uu-tien-viet"><summary>Khám phá thêm theo ngôn ngữ và tài sản</summary>
+            <p class="sample-note" id="vi-native-badge">Nhãn từ khóa giúp lọc nội dung, không phải bản dịch hoặc thẩm định chuyên gia.</p>
+            <p class="sample-note" id="article-coverage-note"></p>
+            <div class="pill-group" id="vi-lang-pills"><button type="button" class="filter-chip" data-lang="vi_first">Tiếng Việt trước</button><button type="button" class="filter-chip" data-lang="vi">Bài gốc Tiếng Việt</button><button type="button" class="filter-chip active" data-lang="">Tất cả ngôn ngữ</button><button type="button" class="filter-chip" data-lang="en">Tiếng Anh</button><button type="button" class="filter-chip" data-lang="zh">Tiếng Trung</button></div>
+            <div class="pill-group" id="vi-topic-pills"><button type="button" class="filter-chip" data-topic="">Tất cả chủ đề</button><button type="button" class="filter-chip" data-topic="risk">Quản trị rủi ro</button><button type="button" class="filter-chip" data-topic="structure">Cấu trúc giá</button><button type="button" class="filter-chip" data-topic="macro">Vĩ mô</button><button type="button" class="filter-chip" data-topic="strategy">Chiến lược</button><button type="button" class="filter-chip" data-topic="psychology">Tâm lý</button></div>
+            <div class="pill-group" id="vi-asset-pills" aria-label="Tài sản xuất hiện trong tập bài"></div>
+          </details>
+        </section>
+        <aside class="research-context panel" id="research-context" aria-label="Nghiên cứu đang làm"><div id="research-context-content"><h2>Nghiên cứu của bạn</h2><p>Đặt câu hỏi rồi chọn bài làm căn cứ.</p><a class="hero-btn primary" href="#workspace">Tạo nghiên cứu</a></div></aside>
+      </div>
+
+      <section class="content-section" id="ho-so" data-page="sources" hidden tabindex="-1">
+        <div class="section-heading"><div><p class="eyebrow">BA NHÓM BẰNG CHỨNG, KHÔNG GỘP THÀNH ĐIỂM</p><h1>Khám phá nguồn</h1></div><p>Đối chiếu tương tác, hiệu suất công khai và công nhận chính thức. Thiếu bằng chứng không có nghĩa hiệu suất bằng 0.</p></div>
+        <div class="workspace-toolbar"><a class="hero-btn primary" href="/research/methods">Hồ sơ và phương pháp</a><a class="hero-btn secondary" href="/research/portfolios">Phân tích ba portfolio</a><a class="hero-btn secondary" href="/blockchain100/2026">Đề cử 2026</a><a class="hero-btn secondary" href="/blockchain100/2025">Hồ sơ và hoạt động 2025</a></div>
+        <div class="pill-group" id="dossier-category-pills" aria-label="Nhóm nguồn">
+          <button type="button" class="filter-chip active" data-program="" data-category="">Tất cả</button>
+          <button type="button" class="filter-chip" data-program="Blockchain 100" data-category="Trader">Trader Awardee</button>
+          <button type="button" class="filter-chip" data-program="" data-category="copy_trading_portfolio">Copy Trading</button>
+          <details class="cohort-more"><summary>Nhóm nguồn khác</summary><div class="pill-group">
+          <button type="button" class="filter-chip" data-program="Blockchain 100" data-category="">Creator Blockchain 100</button>
+          <button type="button" class="filter-chip" data-program="Blockchain 100" data-category="Independent Researcher">Nhà nghiên cứu độc lập</button>
+          <button type="button" class="filter-chip" data-program="Blockchain 100" data-category="Industry Advocate">Đại sứ ngành</button>
+          <button type="button" class="filter-chip" data-program="Blockchain 100" data-category="Community Builder">Xây dựng cộng đồng</button>
+          <button type="button" class="filter-chip" data-program="Blockchain 100" data-category="Video and Live Creator">Video / Live</button>
+          <button type="button" class="filter-chip" data-program="Blockchain 100" data-category="Crypto Press">Báo chí Crypto</button>
+          <button type="button" class="filter-chip" data-program="Blockchain 100" data-category="Rising Star">Ngôi sao mới nổi</button>
+          </div></details>
+        </div>
+        <form class="research-controls dossier-controls" id="dossier-controls">
+          <label>Tác giả<input name="author" placeholder="Tên tác giả…"></label>
+          <label>Kỳ bài xuất bản (UTC)<select name="window" id="engagement-window"><option value="7d">7 ngày</option><option value="30d" selected>30 ngày</option><option value="custom">Tùy chọn</option></select></label>
+          <div class="control-buttons-row"><button type="submit">Tìm nguồn</button><button type="button" class="reset-filter-btn" id="dossier-reset-btn">Đặt lại</button></div>
+          <label class="custom-window-field" hidden>Từ ngày<input name="date_from" type="date" disabled></label><label class="custom-window-field" hidden>Đến ngày<input name="date_to" type="date" disabled></label>
+          <details class="filter-details" id="dossier-extra-filters"><summary>Tiêu chí, sắp xếp & số liệu</summary><div class="advanced-filter-grid">
+          <label>Sắp xếp<select name="sort"><optgroup label="Công nhận"><option value="official_rank">Thứ hạng giải nội dung</option><option value="award_votes">Phiếu giải</option><option value="latest">Nội dung mới nhất</option></optgroup><optgroup label="Tổng trong kỳ"><option value="likes_total">Lượt thích</option><option value="comments_total">Bình luận</option><option value="shares_total">Chia sẻ</option><option value="views_total">Lượt xem</option><option value="interactions_total">Tương tác đủ dữ liệu</option></optgroup><optgroup label="Trung bình / bài"><option value="likes_average">TB lượt thích</option><option value="comments_average">TB bình luận</option><option value="shares_average">TB chia sẻ</option><option value="views_average">TB lượt xem</option><option value="interactions_average">TB tương tác</option></optgroup></select></label>
+          <label>Chương trình<input name="program" placeholder="Blockchain 100"></label><label>Năm<input name="year" placeholder="2025"></label><label>Hạng mục<input name="category" placeholder="Trader"></label>
+          </div>
+          <p class="sample-note" id="dossier-window-note"></p>
+        <details class="metric-definition"><summary>Cách đọc số liệu tương tác</summary><p>Tổng tương tác = lượt thích + bình luận + chia sẻ, chỉ tính bài đủ cả ba chỉ số; không gồm lượt xem. Đây là snapshot mới nhất của bài xuất bản trong kỳ, không phải tăng trưởng tương tác trong kỳ hay bằng chứng lợi nhuận.</p></details>
+          </details>
+        </form>
+        <p class="sample-note" id="dossier-sample" role="status"></p><div class="dossier-grid" id="dossier-grid"></div><div class="pagination-bar" id="dossier-pagination" hidden></div>
+      </section>
+      <details class="secondary-disclosure" id="bang-chung" data-page="sources" hidden><summary>Đối chiếu từng bằng chứng nguồn</summary>
+        <p>Chọn một bằng chứng cụ thể để đọc nguồn gốc hoặc đưa vào nghiên cứu.</p>
+        <div class="research-controls evidence-controls-grid" id="evidence-controls"><label>Tìm chủ thể / nội dung<input id="evidence-q" placeholder="Tác giả, danh mục, BTC…"></label><label>Nhóm bằng chứng<select id="evidence-pillar-filter"><option value="">Cả ba nhóm</option><option value="engagement">Tương tác nội dung</option><option value="performance">Hiệu suất công khai</option><option value="recognition">Công nhận chính thức</option></select></label><label>Cấp xác minh<select id="evidence-level-filter"><option value="">Tất cả cấp</option><option value="official">Thông báo chính thức</option><option value="platform">Trực tiếp nền tảng</option><option value="secondary">Bản lưu trữ Wayback</option><option value="operator_capture">Ảnh chụp do người vận hành cung cấp</option><option value="self_claim">Tác giả tự công bố</option></select></label><button type="button" class="reset-filter-btn" id="evidence-reset-btn">Đặt lại</button></div>
+        <p class="sample-note" id="evidence-sample" role="status"></p><div class="ledger-wrap"><table><thead><tr><th>Chủ thể</th><th>Nhóm bằng chứng</th><th>Cấp xác minh</th><th>Quan sát và giới hạn</th><th>Nguồn</th></tr></thead><tbody id="evidence-body"></tbody></table></div><div class="pagination-bar" id="evidence-pagination" hidden></div>
+      </details>
+
+      <section class="content-section" id="workspace" data-page="research" hidden tabindex="-1">
+        <div class="section-heading"><div><p class="eyebrow">CÂU HỎI · NGUỒN · KẾT LUẬN</p><h1>Nghiên cứu của tôi</h1></div><p>Chỉ lưu trên trình duyệt này, không gửi ghi chú lên máy chủ. Hãy tải bản sao để tránh mất dữ liệu khi xóa trình duyệt.</p></div>
+        <p><a href="/research/methods">Đối chiếu hồ sơ và phương pháp tự công bố</a> hoặc <a href="/research/portfolios">đọc lịch sử ba portfolio</a>: nguồn công khai và giới hạn chứng cứ, không phải nghiên cứu riêng hoặc tín hiệu giao dịch tự động.</p>
+        <p class="workspace-message" id="workspace-message" role="status" aria-live="polite"></p>
+        <div class="workspace-toolbar"><label>Chọn nghiên cứu<select id="workspace-select" aria-label="Chọn nghiên cứu"></select></label></div>
+        <details class="secondary-disclosure" id="workspace-create-panel" open><summary>Tạo câu hỏi mới</summary><form class="research-controls workspace-create" id="workspace-create" method="dialog"><label>Câu hỏi nghiên cứu<input name="question" maxlength="300" required placeholder="Ví dụ: Điều gì làm luận điểm tăng giá BTC mất hiệu lực?"></label><label>Mục đích<select name="purpose"><option value="content">Nội dung có dẫn nguồn</option><option value="strategy">Nghiên cứu phương pháp</option><option value="market">Góc nhìn thị trường</option></select></label><button type="submit">Bắt đầu nghiên cứu</button></form></details>
+        <div id="workspace-editor"><p class="empty">Đặt câu hỏi trước, sau đó chọn nguồn để đối chiếu.</p></div>
+        <div class="workspace-toolbar" id="workspace-downloads" aria-label="File riêng tư đã chuẩn bị"></div>
+        <details class="secondary-disclosure" id="workspace-tools"><summary>Sao lưu và chuyển thiết bị</summary><p>File có thể chứa ghi chú riêng. Không có đồng bộ tài khoản hay mã hóa ghi chú trên trình duyệt.</p><div class="workspace-toolbar"><button type="button" class="inspect-btn" id="workspace-backup">Chuẩn bị bản sao JSON</button><label class="import-control">Nhập bản sao JSON<input type="file" id="workspace-import" accept=".json,application/json"></label></div></details>
+      </section>
+      <details class="secondary-disclosure" id="ban-nhap" data-page="research" hidden><summary>Trích xuất nguồn và câu hỏi cần kiểm chứng trong kho</summary><p>Đây không phải nghiên cứu riêng của bạn. Trích xuất xác định chỉ dùng điều kiện nguồn thực sự nêu; thiếu điều kiện được giữ để kiểm chứng thêm. Không phải bản dịch hoặc đánh giá chuyên gia.</p><div class="draft-grid" id="draft-grid"></div></details>
+
+      <section class="content-section" id="moi" data-page="following" hidden tabindex="-1">
+        <div class="section-heading"><div><p class="eyebrow">NGUỒN VÀ CHỦ ĐỀ BẠN QUAN TÂM</p><h1>Theo dõi cập nhật</h1></div><p>Bài mới vào kho có thể là bài lịch sử. Chọn “Mới xuất bản” để xem theo ngày gốc; kho chỉ bao phủ một phần nguồn công khai.</p></div>
+        <details class="secondary-disclosure"><summary>Thêm danh sách theo dõi</summary><form class="research-controls" id="watch-create" method="dialog"><label>Tên danh sách<input name="label" maxlength="120" required placeholder="Quản trị rủi ro BTC"></label><label>Chủ đề<select name="topic"><option value="">Tất cả</option><option value="risk">Quản trị rủi ro</option><option value="structure">Cấu trúc giá</option><option value="macro">Vĩ mô</option><option value="strategy">Chiến lược</option><option value="psychology">Tâm lý</option><option value="ecosystem">Hệ sinh thái</option></select></label><label>Tài sản<input name="asset" maxlength="20" placeholder="BTC"></label><button type="submit">Lưu danh sách</button></form></details>
+        <div id="watchlist-items" class="workspace-toolbar"></div>
+        <form class="research-controls" id="new-controls"><label>Danh sách theo dõi<select name="watch" id="new-watch"><option value="">Toàn kho công khai</option></select></label><label>Cách xem<select name="mode"><option value="discovered">Mới vào kho / sau lần kiểm tra</option><option value="collected24h">Thu thập trong 24 giờ</option><option value="published">Mới xuất bản 30 ngày</option></select></label><label>Sàng lọc<select name="quality_only"><option value="1">Qua sàng lọc kỹ thuật v2</option><option value="">Tất cả bài được phép công khai</option></select></label><button type="submit">Xem cập nhật</button></form>
+        <p class="sample-note" id="new-sample" role="status"></p><button type="button" class="inspect-btn" id="watch-mark-read" hidden>Đã xem hết các trang đến thời điểm tải</button><div class="article-grid" id="new-grid"></div><div class="pagination-bar" id="new-pagination" hidden></div>
+      </section>
+
+      <div data-page="more" hidden>
+        <section class="section-heading" id="nguon" tabindex="-1"><div><p class="eyebrow">PHẠM VI DỮ LIỆU VÀ TRỢ GIÚP</p><h1>Nguồn dữ liệu & vận hành</h1></div><p>Thông tin phục vụ kiểm toán và vận hành, tách khỏi luồng đọc và nghiên cứu.</p></section>
+        <section class="metrics" id="metrics" aria-label="Tổng quan kho"><p class="empty">Chưa tải tổng quan.</p></section>
+        <details class="secondary-disclosure" id="goal-backlog-panel"><summary>Tiến độ sàng lọc nội dung</summary><span class="status-pill muted" id="goal-status-pill">CHƯA TẢI</span><div class="goal-progress-bar" aria-hidden="true"><div class="goal-progress-fill" id="goal-progress-fill"></div></div><p id="goal-summary-text">Chưa có số liệu ở lượt mở này.</p><div class="goal-breakdown-grid" id="goal-breakdown-grid"></div><ul id="goal-notices"></ul></details>
+        <div class="gate-stack"><div class="gate-panel" id="pipeline-gate"><div><span class="status-pill muted">CHƯA TẢI</span><h2>Kiểm tra đường đi dữ liệu</h2></div><p>Ingest → bằng chứng → dữ liệu công khai; không chứng minh chất lượng trader.</p></div><div class="gate-panel quality-panel" id="quality-gate"><div><span class="status-pill warn">CHƯA THIẾT LẬP</span><h2>Hiệu suất giao dịch</h2></div><p>Giải nội dung và tương tác không phải bằng chứng lợi nhuận. Không ghép danh tính nếu thiếu căn cứ.</p></div></div>
+        <div class="gate-panel ops-panel" id="worker-gate"><div><span class="status-pill muted">CHƯA TẢI</span><h2>Thu thập định kỳ</h2></div><p>Chưa có trạng thái vận hành ở lượt mở này.</p></div>
+        <details class="secondary-disclosure" open><summary>Khả năng truy cập từng nguồn</summary><div class="source-grid" id="source-grid"></div></details>
+        <details class="secondary-disclosure" id="bo-quet"><summary>Cách điều phối bộ thu thập</summary><p>Một nơi ghi dữ liệu, giữ chung giới hạn và thời gian tạm dừng nguồn. Không vượt robots.txt, xác thực hoặc rate limit.</p><div class="glossary-grid" id="scanner-fleet-grid"></div></details>
+        <section class="content-section" id="cam-nang"><div class="section-heading"><h2>Đọc bằng chứng đúng cách</h2></div><div class="glossary-grid"><article class="panel glossary-card"><span class="status-pill">TƯƠNG TÁC</span><h3>Được chú ý ≠ có lợi nhuận</h3><p>Lượt xem, thích và bình luận đo sức hút nội dung. Không tự chứng minh nhận định đúng hoặc giao dịch có lãi.</p></article><article class="panel glossary-card"><span class="status-pill warn">HIỆU SUẤT</span><h3>Phân biệt nền tảng và tự công bố</h3><p>Giữ riêng lợi nhuận của người dẫn và người sao chép. Ảnh PnL hoặc lời tự khai không phải bằng chứng đã xác minh độc lập.</p></article><article class="panel glossary-card"><span class="status-pill">CÔNG NHẬN</span><h3>Giải nội dung ≠ giải giao dịch</h3><p>Blockchain 100 vinh danh nhà sáng tạo và sức ảnh hưởng. Không phải chứng nhận kiểm toán lợi nhuận hay kỹ năng giao dịch bền vững.</p></article></div></section>
+        <p><a class="export-link" href="/api/export.json" target="_blank" rel="noopener">Xuất kho công khai JSON ↗</a></p><p class="sample-note">Bản xuất kho không chứa ghi chú nghiên cứu riêng trong trình duyệt.</p>
+      </div>
+      <footer><p><a href="https://github.com/mrcanlaco/freqpilot-intel/tree/v0.1.0" target="_blank" rel="noopener">Mã nguồn đang chạy (AGPL-3.0)</a> · © 2026 FreqPilot Intel contributors · Phần mềm không kèm bảo đảm.</p><p>Future Intelligence (intel.freqpilot.dev) · Dự án nghiên cứu độc lập, không đại diện cho Binance.</p><p>Không phải khuyến nghị đầu tư. Không tự xuất bản hay giao dịch.</p></footer>
+    </main>
+  </div>
+  <div class="compare-tray" id="compare-tray" hidden><div class="compare-tray-info"><strong>Đối chiếu nguồn (<span id="compare-count">0</span>/3)</strong><div class="compare-chips" id="compare-chips"></div></div><div class="compare-tray-actions"><button type="button" class="hero-btn primary" id="open-compare-btn">Mở so sánh</button><button type="button" class="reset-filter-btn" id="clear-compare-btn">Bỏ chọn</button></div></div>
+  <div class="drawer-backdrop" id="drawer-backdrop" hidden><aside class="detail-drawer" id="detail-drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title"><div class="drawer-header"><div><span class="eyebrow" id="drawer-eyebrow">NGUỒN VÀ BẰNG CHỨNG</span><h2 id="drawer-title">Đang tải…</h2></div><button type="button" class="drawer-close" id="drawer-close" aria-label="Đóng cửa sổ chi tiết">✕ Đóng</button></div><div class="drawer-body" id="drawer-body"></div></aside></div>
+  <div class="action-status" id="action-status" hidden><p id="action-status-text" role="status" aria-live="polite"></p><button type="button" id="action-status-dismiss" aria-label="Đóng thông báo">×</button></div>
+  <script src="/assets/workspace.js" defer></script><script src="/assets/app.js" defer></script>
+</body>
+</html>

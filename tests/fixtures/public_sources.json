@@ -1,0 +1,32 @@
+{
+  "fixture_only": true,
+  "sources": [
+    {
+      "slug": "square-trending-creators",
+      "name": "Synthetic policy fixture",
+      "url": "https://www.binance.com/en/square/profile/synthetic",
+      "fetch_url": "https://www.binance.com/bapi/synthetic-policy-test",
+      "source_type": "binance_square_creator_posts",
+      "adapter": "html",
+      "access_level": "public",
+      "distribution": "public_shareable",
+      "expected_pillar": "engagement",
+      "schedule": "hourly"
+    }
+  ],
+  "crawler_policy": {
+    "enabled": true,
+    "robots_url": "https://www.binance.com/robots.txt",
+    "user_agent": "BinanceTraderIntelligence/0.1 (+public evidence research; no trading)",
+    "refresh_seconds": 3600,
+    "max_robots_bytes": 131072,
+    "discovery": {
+      "enabled": true,
+      "index_url": "https://www.binance.com/sitemap_output/domain=www.binance.com/sitemap_Square_index.xml",
+      "english_child_url": "https://www.binance.com/sitemap_output/domain=www.binance.com/sitemap_Square_en_1.xml",
+      "cadence_seconds": 3600,
+      "max_candidates": 2000,
+      "max_document_bytes": 524288
+    }
+  }
+}

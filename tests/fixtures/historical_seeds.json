@@ -1,0 +1,60 @@
+{
+  "fixture_only": true,
+  "policy": {
+    "max_per_cycle": 3
+  },
+  "seeds": [
+    {
+      "post_id": "91000001",
+      "canonical_url": "https://www.binance.com/en/square/post/91000001",
+      "expected_source_uid": "synthetic-uid-0",
+      "earliest_published_at": "2024-01-01T00:00:00Z",
+      "latest_published_at": "2026-12-31T23:59:59Z",
+      "minimum_text_chars": 1000,
+      "required_content_type": 2,
+      "display_name": "Synthetic creator 0",
+      "username": "synthetic-0",
+      "entity_slug": "synthetic-0",
+      "derived_title": ""
+    },
+    {
+      "post_id": "91000002",
+      "canonical_url": "https://www.binance.com/en/square/post/91000002",
+      "expected_source_uid": "synthetic-uid-1",
+      "earliest_published_at": "2024-01-01T00:00:00Z",
+      "latest_published_at": "2026-12-31T23:59:59Z",
+      "minimum_text_chars": 1000,
+      "required_content_type": 2,
+      "display_name": "Synthetic creator 1",
+      "username": "synthetic-1",
+      "entity_slug": "synthetic-1",
+      "derived_title": ""
+    },
+    {
+      "post_id": "91000003",
+      "canonical_url": "https://www.binance.com/en/square/post/91000003",
+      "expected_source_uid": "synthetic-uid-2",
+      "earliest_published_at": "2024-01-01T00:00:00Z",
+      "latest_published_at": "2026-12-31T23:59:59Z",
+      "minimum_text_chars": 1000,
+      "required_content_type": 2,
+      "display_name": "Synthetic creator 2",
+      "username": "synthetic-2",
+      "entity_slug": "synthetic-2",
+      "derived_title": ""
+    },
+    {
+      "post_id": "91000004",
+      "canonical_url": "https://www.binance.com/en/square/post/91000004",
+      "expected_source_uid": "synthetic-uid-3",
+      "earliest_published_at": "2024-01-01T00:00:00Z",
+      "latest_published_at": "2026-12-31T23:59:59Z",
+      "minimum_text_chars": 1000,
+      "required_content_type": 2,
+      "display_name": "Synthetic creator 3",
+      "username": "synthetic-3",
+      "entity_slug": "synthetic-3",
+      "derived_title": ""
+    }
+  ]
+}

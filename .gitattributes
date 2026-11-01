@@ -1,0 +1,14 @@
+* text=auto eol=lf
+*.py text eol=lf
+*.js text eol=lf
+*.html text eol=lf
+*.css text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.yml text eol=lf
+*.toml text eol=lf
+*.ps1 text eol=crlf
+LICENSE text eol=lf
+NOTICE text eol=lf
+# Executor identity is byte-hashed by the remote lease protocol.
+ops/msi-fetch-worker/executor.py -text

@@ -1,0 +1,17 @@
+{
+  "enabled": false,
+  "baseline": {
+    "started_at": "2026-01-01T00:00:00Z",
+    "article_count": 0,
+    "qualifying_post_ids": []
+  },
+  "minimum_text_chars": 200,
+  "max_archive_fetches_per_cycle": 0,
+  "archive_source": {},
+  "profile_snapshots": [],
+  "cached_details": [],
+  "cdx": {
+    "max_rows": 100,
+    "max_requests_per_cycle": 1
+  }
+}

@@ -1,0 +1,10 @@
+# Copy to ignored runtime/cloudflared.yml; replace the placeholders locally.
+tunnel: 00000000-0000-0000-0000-000000000000
+credentials-file: C:/path/to/cloudflared/your-tunnel-credentials.json
+protocol: http2
+metrics: 127.0.0.1:28768
+
+ingress:
+  - hostname: intel.example.com
+    service: http://127.0.0.1:8768
+  - service: http_status:404
