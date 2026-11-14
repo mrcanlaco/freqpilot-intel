@@ -10,6 +10,7 @@ permission-checked public projection → research workspace/export.
 - `db.py`: SQLite schema, provenance links and public-shareable flags.
 - `public.py` / `research.py`: live authorization, conservative source excerpts,
   filters, pagination and auditable research fields.
+- `brief.py`: permission-checked, bounded intelligence brief export (`bti-intelligence-brief-v1`) for downstream tools; no automatic publishing.
 - `server.py` / `static/`: loopback read-only HTTP and browser-local personal plans.
 - `worker.py` / `content_volume.py`: single-writer scheduling, source gates,
   archive provenance, durable cooldowns and bounded diagnostics.

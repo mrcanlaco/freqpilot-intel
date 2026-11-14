@@ -179,5 +179,26 @@ class ServerSecurityTests(unittest.TestCase):
                     self.assertEqual(status, 400)
 
 
+    def test_brief_endpoint_is_read_only_and_validates_query_bounds(self) -> None:
+        status, headers, body = self.request("GET", "/api/brief?window=7d&topic=ecosystem")
+        self.assertEqual(status, 200)
+        payload = json.loads(body)
+        self.assertEqual(payload["schema"], "bti-intelligence-brief-v1")
+        self.assertEqual(payload["filters"]["topic"], "ecosystem")
+        self.assertEqual(headers["x-content-type-options"], "nosniff")
+
+        head_status, _, head_body = self.request("HEAD", "/api/brief?window=30d")
+        self.assertEqual(head_status, 200)
+        self.assertEqual(head_body, b"")
+
+        for invalid in ("window=1y", "max_items=0", "max_items=21", "max_items=abc", "lang=fr", "asset=NOTACOIN"):
+            with self.subTest(invalid=invalid):
+                bad_status, _, _ = self.request("GET", f"/api/brief?{invalid}")
+                self.assertEqual(bad_status, 400)
+
+        post_status, post_headers, _ = self.request("POST", "/api/brief")
+        self.assertEqual(post_status, 405)
+        self.assertEqual(post_headers["allow"], "GET, HEAD, OPTIONS")
+
 if __name__ == "__main__":
     unittest.main()

@@ -206,6 +206,39 @@
     lines.push("", "## Điều chưa biết / cần phản biện", md(c.unknowns) || "Chưa ghi; không đồng nghĩa đã xác minh đầy đủ.", "", "Tương tác và giải nội dung không chứng minh lợi nhuận. Không phải khuyến nghị giao dịch. Không tự xuất bản.");
     return lines.join("\n");
   }
+  function makeSquarePost(c) {
+    if (!c.conclusion.trim() || !c.entries.length) throw new Error("Cần ít nhất một bằng chứng và kết luận của người nghiên cứu.");
+    if (!c.entries.some(e => e.role !== "support") && !c.unknowns.trim()) throw new Error("Hãy thêm phản bác/bối cảnh hoặc ghi rõ khoảng trống kiểm chứng.");
+    const missing = missingPlanFields(c);
+    if (missing.length) throw new Error(`Cần điền kế hoạch trước khi xuất: ${missing.join(", ")}. Có thể lưu kế hoạch chưa hoàn tất.`);
+    const config = PLAN_PURPOSES[c.purpose], plan = c.plan || emptyPlan();
+    const lines = [
+      `📌 ${c.question.trim()}`,
+      `[Bản nháp nghiên cứu · ${PURPOSES[c.purpose]}]`,
+      "",
+      "🔎 Nhận định của người nghiên cứu:",
+      c.conclusion.trim()
+    ];
+    const filledPlan = config.fields.filter(key => plan[key].trim());
+    if (filledPlan.length) {
+      lines.push("", `🧭 ${config.title} (đề xuất riêng, không phải quy tắc của tác giả nguồn):`);
+      for (const key of filledPlan) lines.push(`• ${PLAN_FIELDS[key]}: ${plan[key].trim()}`);
+    }
+    lines.push("", "📚 Nguồn công khai đối chiếu:");
+    c.entries.forEach((e, i) => {
+      const s = e.snapshot;
+      lines.push(`${i + 1}. [${ROLES[e.role]}] ${s.author} — ${s.title} (v${s.version} · ${s.verification}): “${s.quote}”`);
+      if (e.note.trim()) lines.push(`   ↳ Ghi chú riêng: ${e.note.trim()}`);
+    });
+    lines.push(
+      "",
+      `❓ Khoảng trống cần phản biện: ${c.unknowns.trim() || "Chưa xác minh độc lập về hiệu suất giao dịch."}`,
+      "",
+      "⚠️ Lưu ý: Tổng hợp nghiên cứu cá nhân từ nguồn công khai, không phải khuyến nghị đầu tư hay tín hiệu giao dịch. Tương tác và giải thưởng nội dung không chứng minh lợi nhuận thực tế. Không tự xuất bản.",
+      "#BinanceSquare #CryptoResearch #EvidenceFirst"
+    );
+    return lines.join("\n");
+  }
   const node = (tag, cls, value) => { const n = document.createElement(tag); if (cls) n.className = cls; if (value !== undefined) n.textContent = value; return n; };
   const button = (label, fn, cls = "inspect-btn") => { const b = node("button", cls, label); b.type = "button"; b.addEventListener("click", fn); return b; };
   function download(name, value, type) {
@@ -447,7 +480,23 @@
           message("Đã đối chiếu nguồn. Bấm liên kết Tải .md để lưu bản nháp; không có nội dung nào được tự đăng.");
         } catch (err) { message(err.message, true); }
         finally { b.disabled = false; }
-      }, "hero-btn primary"), button("Xóa nghiên cứu", () => {
+      }, "hero-btn primary"), button("Kiểm tra nguồn & chuẩn bị bài Square (.txt)", async event => {
+        const b = event.currentTarget; b.disabled = true; message("Đang đối chiếu quyền công khai và phiên bản nguồn cho bài Square…");
+        for (const old of document.querySelectorAll("#workspace-downloads a[download$='.txt']")) {
+          URL.revokeObjectURL(old.href); old.remove();
+        }
+        try {
+          if (hasUnsaved()) throw new Error("Còn nội dung chưa lưu. Hãy lưu kết luận/ghi chú trước khi xuất.");
+          const current = active(); makeSquarePost(current);
+          const before = JSON.stringify(current);
+          const validated = await revalidate(current, api.getJSON);
+          assertUnchanged(before, active(), hasUnsaved());
+          const squareText = makeSquarePost(validated);
+          download(`bti-square-${current.id}.txt`, squareText, "text/plain;charset=utf-8");
+          message("Đã đối chiếu nguồn. Bấm Tải .txt để lấy văn bản chuẩn đăng Binance Square; hệ thống không tự đăng.");
+        } catch (err) { message(err.message, true); }
+        finally { b.disabled = false; }
+      }, "hero-btn secondary"), button("Xóa nghiên cứu", () => {
         if (hasUnsaved()) { message("Hãy lưu thay đổi trước khi xóa nghiên cứu.", true); return; }
         if (confirm("Xóa nghiên cứu và các ghi chú riêng? Hãy xuất bản sao nếu cần giữ lại.")) act(() => store.commit(s => { s.collections = s.collections.filter(x => x.id !== c.id); s.active_id = s.collections[0]?.id || null; }), "Đã xóa nghiên cứu đã chọn.");
       }, "reset-filter-btn"));
@@ -533,7 +582,7 @@
     window.addEventListener("beforeunload", event => { if (hasUnsaved()) { event.preventDefault(); event.returnValue = ""; } });
   }
   globalThis.BTIWorkspace = {
-    start, createStore, validateBackup, makeDraft, revalidate, snapshot, mergeBookmarks, missingPlanFields, assertUnchanged,
+    start, createStore, validateBackup, makeDraft, makeSquarePost, revalidate, snapshot, mergeBookmarks, missingPlanFields, assertUnchanged,
     activeId: () => store?.get().active_id || null,
     addArticle(item, evidenceId = null) {
       if (!store || !active()) { message("Hãy tạo/chọn một câu hỏi trước khi thêm nguồn.", true); navigate("workspace"); if (store) openCreate(); return false; }

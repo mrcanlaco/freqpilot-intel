@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 from . import public
+from .brief import build_intelligence_brief
 from .campaigns import load_campaign_assets
 
 STATIC_DIR = Path(__file__).with_name("static")
@@ -153,6 +154,23 @@ class Handler(BaseHTTPRequestHandler):
                 ), head=head)
             elif path == "/api/drafts":
                 self._json({"items": public.drafts(self.app.db_path)}, head=head)
+            elif path == "/api/brief":
+                raw_max = one("max_items")
+                if raw_max is not None and not raw_max.isdigit():
+                    raise ValueError("max_items must be an integer between 1 and 20")
+                lang_param = one("lang") or "vi_first"
+                if lang_param not in {"all", "vi", "vi_first", "en", "zh", "other"}:
+                    raise ValueError("Unsupported lang filter")
+                self._json(build_intelligence_brief(
+                    self.app.db_path,
+                    window=one("window") or "7d",
+                    date_from=one("date_from"),
+                    date_to=one("date_to"),
+                    asset=one("asset"),
+                    topic=one("topic"),
+                    lang=lang_param,
+                    max_items=int(raw_max) if raw_max is not None else 6,
+                ), head=head)
             elif path == "/api/export.json":
                 self._json(public.public_export(self.app.db_path), head=head)
             else:

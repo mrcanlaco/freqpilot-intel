@@ -5,7 +5,7 @@ const assert = require("node:assert/strict");
 const {webcrypto} = require("node:crypto");
 if (!globalThis.crypto) globalThis.crypto = webcrypto;
 require("../src/bti/static/workspace.js");
-const {createStore, validateBackup, revalidate, makeDraft, snapshot, missingPlanFields, assertUnchanged} = BTIWorkspace;
+const {createStore, validateBackup, revalidate, makeDraft, makeSquarePost, snapshot, missingPlanFields, assertUnchanged} = BTIWorkspace;
 const stamp = "2026-10-20T00:00:00.000Z";
 const article = () => ({post_id: "12345678", title: "Synthetic risk evidence", author: "Synthetic author", url: "https://www.binance.com/en/square/post/12345678", version: 1, checksum: "a".repeat(64), published_at: stamp, fetched_at: stamp, excerpt: "Synthetic source states that risk must be bounded before entering a trade.", provenance_type: "archive_snapshot", evidence: [{id: 7, observed_at: stamp, verification_level: "secondary", limitations: "Synthetic archival observation."}]});
 const collection = () => ({id: "synthetic-research", question: "How is risk bounded?", purpose: "content", created_at: stamp, updated_at: stamp, conclusion: "Analyst conclusion, not a source claim.", unknowns: "No verified trading outcome.", entries: [{snapshot: snapshot(article(), 7), role: "context", note: "Private analyst note."}]});
@@ -260,4 +260,17 @@ test("async source checks preserve plans and reject saved, unsaved and purpose r
   assert.doesNotThrow(() => assertUnchanged(before, JSON.parse(before), false));
   const c = store.get().collections[0], planBefore = structuredClone(c.plan);
   await revalidate(c, async () => article()); assert.deepEqual(c.plan, planBefore);
+});
+
+test("makeSquarePost enforces research gates and formats Square-ready text with attribution and disclaimers", () => {
+  const empty = collection(); empty.entries = [];
+  assert.throws(() => makeSquarePost(empty), /bằng chứng/);
+  const valid = validateBackup(backup()).collections[0];
+  valid.question = "Điều kiện nào giữ cấu trúc $BTC hợp lệ?";
+  valid.plan.angle = "Đối chiếu mốc vô hiệu trước khi xét kỳ vọng";
+  const post = makeSquarePost(valid);
+  assert.ok(post.includes("$BTC"));
+  assert.ok(post.includes("Synthetic author"));
+  assert.ok(post.includes("không phải khuyến nghị đầu tư"));
+  assert.ok(post.includes("Không tự xuất bản"));
 });

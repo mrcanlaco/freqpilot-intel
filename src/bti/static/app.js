@@ -31,9 +31,14 @@ const lazySections = new Map();
 const feedStates = new Map();
 const sectionPages = {
   "bai-viet": "discover", "tong-quan": "discover", "uu-tien-viet": "discover", "luong-trai-nghiem": "discover",
+  "square-brief": "brief",
   "ho-so": "sources", "bang-chung": "sources", workspace: "research", "ban-nhap": "research",
   moi: "following", nguon: "more", metrics: "more", "bo-quet": "more", "cam-nang": "more"
 };
+let currentBriefData = null;
+let briefFormat = "market_digest";
+let briefContentType = 1;
+let briefReqSeq = 0;
 let savedBookmarks = new Set();
 let comparedDossiers = new Map();
 let savedFilterActive = false;
@@ -105,7 +110,7 @@ function navigateToSection(id, options = {}) {
   const target = document.getElementById(id) || document.getElementById("bai-viet");
   const page = sectionPages[id] || target.closest("[data-page]")?.dataset.page || "discover";
   document.querySelectorAll("[data-page]").forEach(node => { node.hidden = node.dataset.page !== page; });
-  const title = {discover: "Khám phá", sources: "Nguồn", research: "Nghiên cứu của tôi", following: "Theo dõi", more: "Nguồn dữ liệu & trợ giúp"}[page];
+  const title = {discover: "Khám phá", brief: "Square Brief", sources: "Nguồn", research: "Nghiên cứu của tôi", following: "Theo dõi", more: "Nguồn dữ liệu & trợ giúp"}[page];
   document.title = `${title} · Future Intelligence`;
   for (let node = target; node; node = node.parentElement) {
     if (node.tagName === "DETAILS") node.open = true;
@@ -121,7 +126,7 @@ function navigateToSection(id, options = {}) {
   }
   if (options.load !== false) {
     lazySections.get(target.id)?.();
-    const primary = {discover: "bai-viet", sources: "ho-so", following: "moi"}[page];
+    const primary = {discover: "bai-viet", brief: "square-brief", sources: "ho-so", following: "moi"}[page];
     if (primary && primary !== target.id) lazySections.get(primary)?.();
     if (page === "more") lazySections.get("metrics")?.();
   }
@@ -137,7 +142,7 @@ function lazySection(id, loader) {
   let loading = false, loaded = false;
   const run = async () => {
     const target = document.getElementById(id);
-    if ((loading || loaded) && !["bai-viet", "ho-so"].includes(id)) return;
+    if ((loading || loaded) && !["bai-viet", "ho-so", "square-brief"].includes(id)) return;
     if (target?.closest("[data-page]")?.hidden) return;
     for (let node = target; node; node = node.parentElement) {
       if (node.tagName === "DETAILS" && !node.open) return;
@@ -187,7 +192,9 @@ function listState(name, status) {
     else row.textContent = status === "changed" ? "Chọn Xem cập nhật để tải đúng bộ lọc mới." : "Đang tải dữ liệu…";
     root.append(row);
   }
-  if (name === "article") headerState(status === "loading" ? "Đang tải bài viết…" : "Bài viết chưa tải được · Có thể thử lại", status === "loading" ? "neutral" : "warn");
+  if (name === "article" && !$("#bai-viet")?.closest("[data-page]")?.hidden) {
+    headerState(status === "loading" ? "Đang tải bài viết…" : "Bài viết chưa tải được · Có thể thử lại", status === "loading" ? "neutral" : "warn");
+  }
 }
 
 function metric(label, value, note) {
@@ -1136,6 +1143,260 @@ async function refreshSources() {
   catch (_e) { sectionError("#source-grid", refreshSources); }
 }
 
+const BRIEF_FOOTER_VI = "⚠️ Lưu ý: Tổng hợp dữ liệu nghiên cứu công khai, không phải khuyến nghị đầu tư hay tín hiệu giao dịch. Số liệu tương tác và giải thưởng nội dung không chứng minh lợi nhuận giao dịch thực tế. Không tự xuất bản từ trình duyệt.";
+
+function setBriefMessage(text, bad = false) {
+  const node = $("#brief-message");
+  if (!node) return;
+  node.textContent = text || "";
+  node.classList.toggle("error", Boolean(bad));
+}
+
+function prepareBriefDownload(name, content, mimeType) {
+  const root = $("#brief-downloads");
+  if (!root) return;
+  for (const old of root.querySelectorAll("a")) {
+    if (old.download === name) { URL.revokeObjectURL(old.href); old.remove(); }
+  }
+  const url = URL.createObjectURL(new Blob([content], {type: mimeType}));
+  const link = el("a", "hero-btn secondary", `Tải ${name}`);
+  link.href = url; link.download = name;
+  root.append(link); link.focus();
+}
+
+function composeBriefSquarePreview(brief, formatType, contentType) {
+  if (!brief || !brief.sections) return {eligible: false, title: null, body: "Chưa có dữ liệu gói nội dung."};
+  const allowed = new Set((brief.allowed_assets || []).map(x => String(x).toUpperCase()));
+  const winMode = brief.window?.mode || "7d";
+  const winVi = winMode === "7d" ? "7 ngày gần nhất" : winMode === "30d" ? "30 ngày gần nhất" : (brief.window?.label || "cửa sổ chọn lọc");
+  const cashtags = list => list.map(a => String(a).toUpperCase()).filter(a => allowed.has(a)).slice(0, 5).map(a => `$${a}`).join(" · ");
+  const shortQuote = text => {
+    if (!text || !String(text).trim()) return "";
+    const words = String(text).trim().split(/\s+/);
+    return `“${words.slice(0, 15).join(" ")}${words.length > 15 ? "…" : ""}”`;
+  };
+
+  if (formatType === "market_digest") {
+    const sec = brief.sections.market_digest || {};
+    const items = sec.notable_articles || [];
+    if (!sec.eligible || !items.length) {
+      return {eligible: false, title: null, body: `Chưa có bài công khai đủ điều kiện trong ${winVi} theo bộ lọc hiện tại. Hãy thử chuyển sang kỳ 30 ngày hoặc đặt lại bộ lọc.`};
+    }
+    const topTags = cashtags((sec.top_assets || []).map(x => x.asset));
+    const topTopics = (sec.top_topics || []).slice(0, 3).map(x => x.label_vi).join(", ");
+    const title = `Tiêu điểm dữ liệu cộng đồng Square (${winVi})`;
+    const lines = [`📊 Tổng hợp dữ liệu thảo luận trên Binance Square (${winVi} · ${fmt(sec.sample_count)} bài công khai):`];
+    if (topTags) lines.push(`• Tài sản được nhắc nhiều: ${topTags}`);
+    if (topTopics) lines.push(`• Chủ đề trọng tâm: ${topTopics}`);
+    lines.push("", "🔎 Điểm nhấn góc nhìn từ các tác giả công khai:");
+    items.slice(0, 4).forEach((art, idx) => {
+      const inter = art.total_interactions !== null && art.total_interactions !== undefined ? `${fmt(art.total_interactions)} tương tác quan sát` : "tương tác chưa công bố đầy đủ";
+      let row = `${idx + 1}. ${art.author} — ${art.title} (${inter}).`;
+      const q = shortQuote(art.research_statement);
+      if (q) row += ` Điều kiện nguồn: ${q}`;
+      lines.push(row);
+    });
+    if (contentType === 2) {
+      lines.push("", "🧭 Nhận định cấu trúc dữ liệu:", "Số liệu ghi nhận mức độ tập trung thảo luận theo thời điểm chụp; tương tác cao không đồng nghĩa xác suất đúng của kịch bản giá.");
+    }
+    lines.push("", BRIEF_FOOTER_VI, "#BinanceSquare #CryptoResearch #QuanTriRuiRo");
+    return {eligible: true, title: contentType === 2 ? title : null, body: lines.join("\n")};
+  }
+
+  if (formatType === "conditional_scenarios") {
+    const sec = brief.sections.conditional_scenarios || {};
+    const items = sec.items || [];
+    if (!sec.eligible || !items.length) {
+      return {eligible: false, title: null, body: `Chưa có bài viết nào chứa mốc kích hoạt / vô hiệu rõ ràng trong ${winVi}. Hãy thử mở rộng sang 30 ngày hoặc xem tuyến Bản tin xu hướng.`};
+    }
+    const tags = cashtags(items.map(x => x.asset).filter(Boolean));
+    const title = `Bản đồ kịch bản có điều kiện (${winVi})`;
+    const lines = [`🗺️ Tổng hợp các kịch bản có điều kiện rõ ràng trên Square (${winVi}):`];
+    if (tags) lines.push(`Tài sản ghi nhận điều kiện: ${tags}`);
+    lines.push("");
+    items.slice(0, 4).forEach((sc, idx) => {
+      const assetLbl = sc.asset && allowed.has(String(sc.asset).toUpperCase()) ? `$${String(sc.asset).toUpperCase()}` : "Tài sản";
+      lines.push(
+        `${idx + 1}. ${assetLbl} (${sc.horizon || "khung giờ chưa nêu"}) — theo ${sc.author}:`,
+        `   • Điều kiện kích hoạt: ${sc.trigger || "chưa nêu"}`,
+        `   • Mốc vô hiệu / rủi ro: ${sc.invalidation || "chưa nêu"}`,
+        `   • Khoảng trống chưa kiểm chứng: ${(sc.missing_fields || []).slice(0, 3).join(", ")}`
+      );
+    });
+    if (contentType === 2) {
+      lines.push("", "📌 Nguyên tắc đọc kịch bản nguồn:", "Mỗi kịch bản là phát biểu có điều kiện của từng tác giả tại ngày xuất bản gốc; cần tự kiểm chứng phí, trượt giá và quản trị vốn riêng.");
+    }
+    lines.push("", BRIEF_FOOTER_VI, "#BinanceSquare #KichBanThiTruong #RiskManagement");
+    return {eligible: true, title: contentType === 2 ? title : null, body: lines.join("\n")};
+  }
+
+  const sec = brief.sections.creator_spotlights || {};
+  const items = sec.items || [];
+  if (!sec.eligible || !items.length) {
+    return {eligible: false, title: null, body: `Chưa có hồ sơ Creator khớp bộ lọc trong ${winVi}. Hãy thử mở rộng kỳ thời gian hoặc bỏ lọc tài sản.`};
+  }
+  const title = `Đối chiếu 3 trụ cột bằng chứng Creator (${winVi})`;
+  const lines = [`🔍 Đối chiếu hồ sơ hoạt động trên Square qua 3 trụ cột bằng chứng (${winVi}):`, ""];
+  items.slice(0, 3).forEach((sp, idx) => {
+    const totals = sp.engagement_window?.totals || {};
+    const interTxt = totals.interactions !== null && totals.interactions !== undefined ? `${fmt(totals.interactions)} tương tác` : "chưa đủ dữ liệu tổng tương tác";
+    const perf = sp.three_pillars?.performance?.summary_vi || "Chưa có bằng chứng hiệu suất cấp nền tảng.";
+    const rec = sp.three_pillars?.recognition || {};
+    const recTxt = rec.status === "available" && rec.award_category
+      ? `Awardee hạng mục ${rec.award_category}${rec.award_rank !== null && rec.award_rank !== undefined ? ` (hạng ${rec.award_rank})` : ""}`
+      : "Chưa ghi nhận giải thưởng chính thức trong tập dữ liệu";
+    lines.push(
+      `${idx + 1}. ${sp.display_name} (${sp.category_label_vi || "Creator"}):`,
+      `   • Tương tác (${winVi}): ${fmt(sp.engagement_window?.sample_n ?? 0)} bài công khai · ${interTxt}`,
+      `   • Hiệu suất thực tế: ${perf}`,
+      `   • Công nhận chính thức: ${recTxt}`
+    );
+  });
+  if (contentType === 2) {
+    lines.push("", "⚖️ Tách bạch ba trụ cột:", "Tách riêng tương tác cộng đồng, dữ liệu danh mục công khai và giải thưởng nội dung giúp tránh nhầm lẫn giữa độ phủ truyền thông với lợi nhuận đã kiểm toán.");
+  }
+  lines.push("", BRIEF_FOOTER_VI, "#BinanceSquare #DueDiligence #EvidenceFirst");
+  return {eligible: true, title: contentType === 2 ? title : null, body: lines.join("\n")};
+}
+
+function renderBriefStudio() {
+  const data = currentBriefData;
+  if (!data) return;
+  const digest = data.sections?.market_digest || {};
+  const scenarios = data.sections?.conditional_scenarios || {};
+  const spotlights = data.sections?.creator_spotlights || {};
+
+  $("#brief-metrics")?.replaceChildren(
+    metric("Bài trong kỳ", fmt(digest.sample_count ?? 0), `${fmt(digest.vi_native_count ?? 0)} bài gốc Tiếng Việt`),
+    metric("Kịch bản có điều kiện", fmt(scenarios.sample_count ?? 0), "Có mốc kích hoạt / vô hiệu"),
+    metric("Hồ sơ Creator", fmt(spotlights.sample_count ?? 0), "Đối chiếu 3 trụ cột độc lập"),
+    metric("Mã gói Brief", String(data.brief_id || "").slice(0, 8) || "—", `Cập nhật: ${when(digest.as_of || data.generated_at)}`)
+  );
+
+  const pills = $("#brief-asset-pills");
+  if (pills) {
+    pills.replaceChildren();
+    const activeAsset = ($("#brief-asset-input")?.value || "").trim().toUpperCase();
+    if ((data.allowed_assets || []).length || activeAsset) {
+      const allBtn = el("button", `filter-chip ${!activeAsset ? "active" : ""}`, "Tất cả tài sản hợp lệ");
+      allBtn.type = "button";
+      allBtn.addEventListener("click", () => { $("#brief-asset-input").value = ""; refreshBriefFromControls(); });
+      pills.append(allBtn);
+      for (const ticker of data.allowed_assets || []) {
+        const chip = el("button", `filter-chip ${activeAsset === ticker ? "active" : ""}`, `$${ticker}`);
+        chip.type = "button";
+        chip.addEventListener("click", () => { $("#brief-asset-input").value = ticker; refreshBriefFromControls(); });
+        pills.append(chip);
+      }
+    }
+  }
+
+  document.querySelectorAll("#brief-format-tabs .filter-chip").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.briefFormat === briefFormat);
+  });
+  document.querySelectorAll("#brief-type-tabs .filter-chip").forEach(btn => {
+    btn.classList.toggle("active", Number(btn.dataset.contentType) === briefContentType);
+  });
+
+  const composed = composeBriefSquarePreview(data, briefFormat, briefContentType);
+  const titleNode = $("#brief-preview-title");
+  if (titleNode) {
+    titleNode.hidden = !composed.title;
+    titleNode.textContent = composed.title || "";
+  }
+  $("#brief-preview-body").textContent = composed.body;
+  const limit = briefContentType === 2 ? 15000 : 2200;
+  $("#brief-char-count").textContent = `${fmt(composed.body.length)} / ${fmt(limit)} ký tự`;
+  $("#brief-copy-btn").disabled = !composed.eligible;
+  $("#brief-download-md-btn").disabled = !composed.eligible;
+
+  const sourceList = $("#brief-source-list");
+  sourceList.replaceChildren();
+  if (briefFormat === "market_digest") {
+    const items = digest.notable_articles || [];
+    if (!items.length) sourceList.append(el("p", "empty", "Chưa có bài nguồn trong kỳ này."));
+    for (const art of items) {
+      const card = el("article", "brief-source-card");
+      card.append(
+        el("h3", "", art.title),
+        el("p", "", `${art.author} · v${art.version} · Xuất bản: ${when(art.published_at)} · Tương tác: ${fmt(art.total_interactions)}`),
+        el("p", "", `Trích đoạn: "${art.excerpt}"`)
+      );
+      const row = el("div", "article-actions");
+      const openBtn = el("button", "inspect-btn", "Đọc & chọn bằng chứng");
+      openBtn.type = "button"; openBtn.addEventListener("click", () => openArticleDrawer(art.post_id));
+      const srcLink = el("a", "", "Nguồn gốc ↗"); srcLink.href = art.source_url || art.url; srcLink.target = "_blank"; srcLink.rel = "noopener";
+      row.append(openBtn, srcLink); card.append(row); sourceList.append(card);
+    }
+  } else if (briefFormat === "conditional_scenarios") {
+    const items = scenarios.items || [];
+    if (!items.length) sourceList.append(el("p", "empty", "Chưa có kịch bản đủ điều kiện trong kỳ này."));
+    for (const sc of items) {
+      const card = el("article", "brief-source-card");
+      card.append(
+        el("h3", "", `${sc.asset ? `$${sc.asset} · ` : ""}${sc.title}`),
+        el("p", "", `${sc.author} · v${sc.version} · Khung: ${sc.horizon || "Chưa nêu"}`),
+        el("p", "", `Kích hoạt: ${sc.trigger || "Chưa nêu"} · Vô hiệu: ${sc.invalidation || "Chưa nêu"}`)
+      );
+      const row = el("div", "article-actions");
+      const openBtn = el("button", "inspect-btn", "Đọc bài nguồn");
+      openBtn.type = "button"; openBtn.addEventListener("click", () => openArticleDrawer(sc.post_id));
+      row.append(openBtn); card.append(row); sourceList.append(card);
+    }
+  } else {
+    const items = spotlights.items || [];
+    if (!items.length) sourceList.append(el("p", "empty", "Chưa có hồ sơ Creator trong kỳ này."));
+    for (const sp of items) {
+      const card = el("article", "brief-source-card");
+      card.append(
+        el("h3", "", sp.display_name),
+        el("p", "", `${sp.category_label_vi || sp.category} · ${fmt(sp.engagement_window?.sample_n ?? 0)} bài trong kỳ`),
+        el("p", "", sp.three_pillars?.performance?.summary_vi || "")
+      );
+      const row = el("div", "article-actions");
+      const openBtn = el("button", "inspect-btn", "Mở hồ sơ 3 trụ cột");
+      openBtn.type = "button"; openBtn.addEventListener("click", () => openDossierDrawer(sp.slug));
+      row.append(openBtn); card.append(row); sourceList.append(card);
+    }
+  }
+}
+
+function syncBriefCustomWindow() {
+  const form = $("#brief-controls");
+  if (!form) return;
+  const isCustom = form.elements.window.value === "custom";
+  for (const wrap of form.querySelectorAll(".brief-custom-window")) {
+    wrap.hidden = !isCustom;
+    const inp = wrap.querySelector("input");
+    if (inp) inp.disabled = !isCustom;
+  }
+}
+
+async function refreshBriefFromControls(updateURL = true) {
+  const form = $("#brief-controls");
+  if (!form) return;
+  syncBriefCustomWindow();
+  if (updateURL) syncFilterURL("b", form, 0);
+  const query = queryFromForm(form);
+  const apiHref = `/api/brief${query ? `?${query}` : ""}`;
+  const rawLink = $("#brief-raw-api-link");
+  if (rawLink) rawLink.href = apiHref;
+  const seq = ++briefReqSeq;
+  setBriefMessage("");
+  try {
+    const data = await getJSON(apiHref);
+    if (seq !== briefReqSeq) return;
+    currentBriefData = data;
+    renderBriefStudio();
+    if (!$("#square-brief")?.closest("[data-page]")?.hidden) {
+      headerState(`Square Brief · ${fmt(data.sections?.market_digest?.sample_count ?? 0)} bài công khai · Chỉ đọc`);
+    }
+  } catch (err) {
+    if (seq !== briefReqSeq) return;
+    sectionError("#brief-metrics", () => refreshBriefFromControls(false), `Không tổng hợp được gói nội dung (${err.message}).`);
+  }
+}
+
 async function refreshNew(offset = 0) {
   const seq = ++newReqSeq, form = $("#new-controls");
   const mode = form.elements.mode.value;
@@ -1183,14 +1444,16 @@ async function refreshNew(offset = 0) {
 function restoreRoute(initial = false, scroll = false) {
   const params = new URL(location.href).searchParams;
   const changed = new Set();
-  for (const [prefix, selector] of [["a", "#article-controls"], ["d", "#dossier-controls"]]) {
+  for (const [prefix, selector] of [["a", "#article-controls"], ["d", "#dossier-controls"], ["b", "#brief-controls"]]) {
     const identity = routeIdentity(prefix, params);
     if (routeIdentities.get(prefix) === identity) continue;
     routeIdentities.set(prefix, identity);
     changed.add(prefix);
     const form = $(selector);
+    if (!form) continue;
     if (prefix === "a") resetArticleControls();
-    else { form.reset(); initializeDossierWindow(); }
+    else if (prefix === "d") { form.reset(); initializeDossierWindow(); }
+    else { form.reset(); syncBriefCustomWindow(); }
     for (const [key, value] of params) {
       if (!key.startsWith(`${prefix}.`)) continue;
       const control = form.elements.namedItem(key.slice(2));
@@ -1198,10 +1461,11 @@ function restoreRoute(initial = false, scroll = false) {
       control.value = value;
     }
     if (prefix === "a") savedFilterActive = params.get("saved") === "1";
-    else for (const field of form.querySelectorAll(".custom-window-field")) {
+    else if (prefix === "d") for (const field of form.querySelectorAll(".custom-window-field")) {
       field.hidden = form.elements.window.value !== "custom";
       field.querySelector("input").disabled = field.hidden;
     }
+    else syncBriefCustomWindow();
   }
   renderActiveArticleFilterBar();
   const kind = params.has("article") ? "article" : params.has("dossier") ? "dossier" : "";
@@ -1217,6 +1481,9 @@ function restoreRoute(initial = false, scroll = false) {
   if (changed.has("d")) {
     if (page !== "sources") { feedRequests.delete("dossier"); listState("dossier", "loading"); }
     else refreshDossiersFromControls(false, Number(params.get("d.offset") || 0), false);
+  }
+  if (changed.has("b") && page === "brief") {
+    refreshBriefFromControls(false);
   }
   navigateToSection(id, {history: false, scroll: false});
   const reader = kind ? `${kind}:${params.get(kind)}` : "";
@@ -1388,6 +1655,63 @@ async function bootResearch() {
   });
   $("#new-controls").addEventListener("submit", event => { event.preventDefault(); refreshNew(); });
   $("#new-controls").addEventListener("change", () => { newReqSeq++; listState("new", "changed"); });
+  const briefForm = $("#brief-controls");
+  if (briefForm) {
+    briefForm.addEventListener("submit", event => { event.preventDefault(); refreshBriefFromControls(true); });
+    for (const sel of briefForm.querySelectorAll("select, input[type='date']")) {
+      sel.addEventListener("change", () => refreshBriefFromControls(true));
+    }
+    let briefDebounce = null;
+    briefForm.elements.asset?.addEventListener("input", () => {
+      clearTimeout(briefDebounce);
+      briefDebounce = setTimeout(() => refreshBriefFromControls(true), 320);
+    });
+    $("#brief-reset-btn")?.addEventListener("click", () => {
+      briefForm.reset(); syncBriefCustomWindow(); refreshBriefFromControls(true);
+    });
+  }
+  document.querySelectorAll("#brief-format-tabs .filter-chip").forEach(btn => {
+    btn.addEventListener("click", () => {
+      briefFormat = btn.dataset.briefFormat || "market_digest";
+      renderBriefStudio();
+    });
+  });
+  document.querySelectorAll("#brief-type-tabs .filter-chip").forEach(btn => {
+    btn.addEventListener("click", () => {
+      briefContentType = Number(btn.dataset.contentType) === 2 ? 2 : 1;
+      renderBriefStudio();
+    });
+  });
+  $("#brief-copy-btn")?.addEventListener("click", async () => {
+    if (!currentBriefData) return;
+    const composed = composeBriefSquarePreview(currentBriefData, briefFormat, briefContentType);
+    if (!composed.eligible) return;
+    const fullText = composed.title ? `${composed.title}\n\n${composed.body}` : composed.body;
+    try {
+      await navigator.clipboard.writeText(fullText);
+      setBriefMessage("Đã sao chép văn bản nháp vào bộ nhớ tạm. Bạn có thể dán lên Binance Square sau khi tự kiểm tra lại.");
+    } catch (_e) {
+      prepareBriefDownload(`square-${briefFormat}.txt`, fullText, "text/plain;charset=utf-8");
+      setBriefMessage("Trình duyệt chặn quyền clipboard trực tiếp; đã tạo file .txt bên dưới để bạn tải về.");
+    }
+  });
+  $("#brief-download-md-btn")?.addEventListener("click", () => {
+    if (!currentBriefData) return;
+    const composed = composeBriefSquarePreview(currentBriefData, briefFormat, briefContentType);
+    if (!composed.eligible) return;
+    const mdText = composed.title ? `# ${composed.title}\n\n${composed.body}\n` : `${composed.body}\n`;
+    prepareBriefDownload(`bti-square-${briefFormat}-${String(currentBriefData.brief_id).slice(0, 8)}.md`, mdText, "text/markdown;charset=utf-8");
+    setBriefMessage("Đã chuẩn bị file Markdown bản nháp ở thanh tải xuống bên dưới.");
+  });
+  $("#brief-download-json-btn")?.addEventListener("click", () => {
+    if (!currentBriefData) return;
+    prepareBriefDownload(
+      `bti-brief-${String(currentBriefData.brief_id).slice(0, 8)}.json`,
+      JSON.stringify(currentBriefData, null, 2) + "\n",
+      "application/json;charset=utf-8"
+    );
+    setBriefMessage("Đã chuẩn bị gói JSON chuẩn bti-intelligence-brief-v1 (dùng được ngay với Square Studio CLI).");
+  });
   $("#watch-mark-read").addEventListener("click", () => {
     const page = newArticleData.pagination;
     if (feedStates.get("new") === "ready" && newLoadedWatchId && newLoadedMode === "discovered" && newSnapshotAt
@@ -1402,6 +1726,7 @@ async function bootResearch() {
   lazySection("bang-chung", () => refreshEvidence());
   lazySection("ban-nhap", refreshDrafts);
   lazySection("nguon", refreshSources);
+  lazySection("square-brief", () => refreshBriefFromControls(false));
   lazySection("moi", () => refreshNew());
   // Operational overview is independent and only requested when More is exposed.
   lazySection("metrics", refreshOverview);

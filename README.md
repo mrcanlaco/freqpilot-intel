@@ -13,6 +13,18 @@ official recognition. A content award is not audited trading performance; missin
 evidence stays unknown. Deterministic keyword labels are not AI translations or
 validated investment signals.
 
+## v0.2.0: Square Brief
+
+- Open **Square Brief** in the navigation to preview deterministic Vietnamese
+  drafts from permitted public sources. Filter by publication window, asset,
+  topic or language; inspect citations before copying or downloading a draft.
+- Export the same `bti-intelligence-brief-v1` package through read-only
+  `GET /api/brief` or `python -m bti export-brief`. The browser can download JSON
+  for a separately operated publishing tool; this application does not publish.
+- Personal research can also export Square text after rechecking source versions
+  and public permissions. Private notes stay in the browser.
+
+
 ## What this repository contains
 
 Application source, synthetic tests, empty configuration examples and generic

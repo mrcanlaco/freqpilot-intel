@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 from .backup import create_backup
+from .brief import build_intelligence_brief
 from .content_volume import run_content_volume_batch
 from .db import init_db
 from .domain import build_drafts
@@ -83,6 +84,15 @@ def parser() -> argparse.ArgumentParser:
     serve_parser.add_argument("--port", type=int, default=8768)
     export_parser = sub.add_parser("export", help="Write a public-safe JSON export")
     export_parser.add_argument("--output", required=True)
+    brief_parser = sub.add_parser("export-brief", help="Export a permission-checked intelligence brief JSON")
+    brief_parser.add_argument("--window", choices=("7d", "30d", "custom"), default="7d")
+    brief_parser.add_argument("--date-from", help="UTC YYYY-MM-DD start for custom window")
+    brief_parser.add_argument("--date-to", help="UTC YYYY-MM-DD end for custom window")
+    brief_parser.add_argument("--asset", help="Optional canonical ticker filter (e.g. BTC)")
+    brief_parser.add_argument("--topic", help="Optional topic code filter")
+    brief_parser.add_argument("--lang", choices=("all", "vi", "vi_first", "en", "zh", "other"), default="vi_first")
+    brief_parser.add_argument("--max-items", type=int, default=6)
+    brief_parser.add_argument("--output", help="Optional project-local JSON output path")
     return result
 
 
@@ -164,4 +174,24 @@ def main(argv: list[str] | None = None) -> int:
         output.parent.mkdir(parents=True, exist_ok=True)
         output.write_text(json.dumps(public_export(db_path), ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         _json_print({"output": str(output)})
+    elif args.command == "export-brief":
+        brief = build_intelligence_brief(
+            db_path,
+            window=args.window,
+            date_from=args.date_from,
+            date_to=args.date_to,
+            asset=args.asset,
+            topic=args.topic,
+            lang=args.lang,
+            max_items=args.max_items,
+        )
+        if args.output:
+            output = Path(args.output).resolve()
+            if ROOT.resolve() not in output.parents:
+                raise SystemExit("Export path must stay inside the project root")
+            output.parent.mkdir(parents=True, exist_ok=True)
+            output.write_text(json.dumps(brief, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+            _json_print({"output": str(output), "brief_id": brief["brief_id"]})
+        else:
+            _json_print(brief)
     return 0
