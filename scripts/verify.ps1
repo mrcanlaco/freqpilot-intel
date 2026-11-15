@@ -10,5 +10,9 @@ node --check src/bti/static/app.js
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 node --check src/bti/static/workspace.js
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-node --test tests/test_workspace.js
+node --check src/bti/static/drafts.js
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+node --check src/bti/static/composer.js
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+node --test tests/test_workspace.js tests/test_drafts.js
 exit $LASTEXITCODE

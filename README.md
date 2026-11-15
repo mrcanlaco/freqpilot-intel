@@ -13,11 +13,20 @@ official recognition. A content award is not audited trading performance; missin
 evidence stays unknown. Deterministic keyword labels are not AI translations or
 validated investment signals.
 
-## v0.2.0: Square Brief
+## v0.3.0: Source-to-draft workspace
 
-- Open **Square Brief** in the navigation to preview deterministic Vietnamese
-  drafts from permitted public sources. Filter by publication window, asset,
-  topic or language; inspect citations before copying or downloading a draft.
+- **Hôm nay** is the starting page. Pick a public source or choose **Tạo bài Square**.
+  The five primary destinations separate sources, drafts, research and operations.
+- Edit the title and body alongside source cards and the final-text preview.
+  Mobile uses **Nguồn / Soạn bài / Xem trước** with persistent save/export actions.
+- Drafts autosave in this browser and appear in **Bài viết**. Search, reopen,
+  delete or export/import a private JSON backup. There is no cross-device sync.
+  Storage failures preserve the saved draft and pending text with a recovery download.
+- Copy or download `.txt` only after rechecking public permission and exact source
+  revisions. Authored text stays yours; private notes never enter the post.
+- **Kho nguồn → Gợi ý bài viết** retains deterministic Vietnamese templates
+  (not AI). Choose **Soạn từ gợi ý này** to create an independent editable draft;
+  subsequent filter changes cannot overwrite it.
 - Export the same `bti-intelligence-brief-v1` package through read-only
   `GET /api/brief` or `python -m bti export-brief`. The browser can download JSON
   for a separately operated publishing tool; this application does not publish.
@@ -82,7 +91,9 @@ python scripts/bootstrap.py --config-only
 PYTHONPATH=src python -m unittest discover -s tests -v
 node --check src/bti/static/app.js
 node --check src/bti/static/workspace.js
-node --test tests/test_workspace.js
+node --check src/bti/static/drafts.js
+node --check src/bti/static/composer.js
+node --test tests/test_workspace.js tests/test_drafts.js
 ```
 
 CI also exercises the signed executor protocol, hybrid shared authority, bounded
@@ -91,9 +102,12 @@ establish current access to Binance or any archive provider.
 
 ## Privacy and deployment
 
-Personal research stays in localStorage for the exact origin/browser profile.
-Export private JSON before changing browsers or hostnames, then import it at the
-new origin. The public export API does not include those personal notes.
+Personal research and drafts stay in localStorage for the exact origin/browser
+profile. Private draft backups include notes and complete source references; keep
+them private. Export before changing browsers or hostnames, then import at the new
+origin. Clearing site data removes local drafts. No draft text or private note is
+sent to the server; the public export API cannot include them. Research and draft
+stores are independent, so this update does not migrate or overwrite existing plans.
 
 Database, credentials, raw captures and generated reports remain ignored. Review
 the [operations guide](docs/OPERATIONS.md) before exposing the loopback app through

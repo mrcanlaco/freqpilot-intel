@@ -15,9 +15,13 @@ recognition and engagement at their actual trust levels. Preserve provenance,
 periods, timestamps and missing fields. No amount of follower engagement or an
 influence award establishes audited trading skill.
 
-Personal research lives in the user's browser. Private JSON/Markdown exports may
-contain their notes and should not enter Git. A hostname change creates a separate
-browser origin; use explicit export/import while the previous origin is reachable.
+Personal research and editable drafts live in the user's browser, not on the
+server. Private backups may contain notes and full source references and should
+not enter Git or public posts. Draft `.txt` and clipboard exports omit private
+notes and recheck public permission and source revisions. Authored commentary is
+not independently verified. There is no scheduling or automatic publishing.
+A hostname change creates a separate browser origin; use explicit export/import
+while the previous origin is reachable. Clearing site data deletes local drafts.
 
 The default source lists are empty and collection is disabled. Example files
 contain configuration shapes, not a licensed dataset or proof of source access.

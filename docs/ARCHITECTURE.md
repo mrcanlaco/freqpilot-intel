@@ -12,6 +12,10 @@ permission-checked public projection → research workspace/export.
   filters, pagination and auditable research fields.
 - `brief.py`: permission-checked, bounded intelligence brief export (`bti-intelligence-brief-v1`) for downstream tools; no automatic publishing.
 - `server.py` / `static/`: loopback read-only HTTP and browser-local personal plans.
+- `static/drafts.js`: bounded browser-local draft storage, atomic saves, merge-only
+  backup imports and post rendering without private notes.
+- `static/composer.js`: source/editor/preview UI, local autosave and live source
+  revalidation before post export. Async reads cannot replace intervening edits.
 - `worker.py` / `content_volume.py`: single-writer scheduling, source gates,
   archive provenance, durable cooldowns and bounded diagnostics.
 - `backup.py`: integrity-checked online backups and scoped retention.

@@ -30,6 +30,7 @@ let routeReader = "";
 const lazySections = new Map();
 const feedStates = new Map();
 const sectionPages = {
+  today: "home", "my-posts": "drafts", composer: "writing",
   "bai-viet": "discover", "tong-quan": "discover", "uu-tien-viet": "discover", "luong-trai-nghiem": "discover",
   "square-brief": "brief",
   "ho-so": "sources", "bang-chung": "sources", workspace: "research", "ban-nhap": "research",
@@ -100,33 +101,38 @@ function readerURL(kind, key) {
   const url = new URL(location.href);
   url.searchParams.delete("article"); url.searchParams.delete("dossier");
   if (kind) url.searchParams.set(kind, key);
-  if (kind) url.hash = kind === "dossier" ? "ho-so" : ($("#moi").closest("[data-page]")?.hidden ? "bai-viet" : "moi");
+  if (kind) {
+    const page = document.querySelector("[data-page]:not([hidden])")?.dataset.page;
+    url.hash = kind === "dossier" ? "ho-so" : page === "writing" ? "composer" : page === "brief" ? "square-brief" : page === "home" ? "today" : page === "following" ? "moi" : "bai-viet";
+  }
   routeReader = kind ? `${kind}:${key}` : "";
   if (url.href !== location.href) history.pushState(null, "", url);
 }
 
 function navigateToSection(id, options = {}) {
-  id = String(id || "bai-viet").replace(/^#/, "");
-  const target = document.getElementById(id) || document.getElementById("bai-viet");
-  const page = sectionPages[id] || target.closest("[data-page]")?.dataset.page || "discover";
+  id = String(id || "today").replace(/^#/, "");
+  const target = document.getElementById(id) || document.getElementById("today");
+  const page = sectionPages[id] || target.closest("[data-page]")?.dataset.page || "home";
   document.querySelectorAll("[data-page]").forEach(node => { node.hidden = node.dataset.page !== page; });
-  const title = {discover: "Khám phá", brief: "Square Brief", sources: "Nguồn", research: "Nghiên cứu của tôi", following: "Theo dõi", more: "Nguồn dữ liệu & trợ giúp"}[page];
+  const title = {home:"Hôm nay", drafts:"Bài viết của tôi", writing:"Soạn bài Square", discover:"Kho nguồn", brief:"Gợi ý bài viết", sources:"Hồ sơ nguồn", research:"Nghiên cứu của tôi", following:"Theo dõi", more:"Nguồn dữ liệu & trợ giúp"}[page];
   document.title = `${title} · Future Intelligence`;
   for (let node = target; node; node = node.parentElement) {
     if (node.tagName === "DETAILS") node.open = true;
   }
   document.querySelectorAll(".nav-item").forEach(link => {
-    const active = sectionPages[link.dataset.view] === page;
+    const group = value => ["discover", "sources", "following", "brief"].includes(value) ? "library" : ["drafts", "writing"].includes(value) ? "posts" : value;
+    const active = group(sectionPages[link.dataset.view]) === group(page);
     link.classList.toggle("active", active);
     if (active) link.setAttribute("aria-current", "page"); else link.removeAttribute("aria-current");
   });
+  globalThis.BTIComposer?.show(page);
   if (options.history !== false) {
     const url = new URL(location.href); url.hash = target.id;
     if (url.href !== location.href) history.pushState(null, "", url);
   }
   if (options.load !== false) {
     lazySections.get(target.id)?.();
-    const primary = {discover: "bai-viet", brief: "square-brief", sources: "ho-so", following: "moi"}[page];
+    const primary = {home:"today", discover: "bai-viet", brief: "square-brief", sources: "ho-so", following: "moi"}[page];
     if (primary && primary !== target.id) lazySections.get(primary)?.();
     if (page === "more") lazySections.get("metrics")?.();
   }
@@ -780,6 +786,8 @@ function renderArticles(data, resetLimit = true) {
     const inspectBtn = el("button", "inspect-btn", "Đọc & chọn bằng chứng");
     inspectBtn.type = "button";
     inspectBtn.addEventListener("click", () => openArticleDrawer(postKey));
+    const createBtn = el("button", "hero-btn primary", "Tạo bài từ nguồn này");
+    createBtn.type = "button"; createBtn.addEventListener("click", () => BTIComposer.fromArticle(postKey));
     const isSaved = savedBookmarks.has(postKey);
     const saveBtn = el("button", `bookmark-btn ${isSaved ? "saved" : ""}`, isSaved ? "📌 Đã lưu" : "📌 Lưu bài");
     saveBtn.type = "button";
@@ -794,7 +802,7 @@ function renderArticles(data, resetLimit = true) {
     extLink.href = item.citation?.source_url || item.url;
     extLink.target = "_blank";
     extLink.rel = "noopener";
-    actions.append(inspectBtn, saveBtn, extLink);
+    actions.append(createBtn, inspectBtn, saveBtn, extLink);
     provenance.append(metrics);
     card.append(meta, heading, preview, badges, actions, provenance);
     root.append(card);
@@ -822,7 +830,8 @@ async function openArticleDrawer(postKey, updateURL = true) {
   const cleanKey = String(postKey);
   const seq = ++drawerReqSeq;
   const fromFollowing = !$("#moi").closest("[data-page]")?.hidden;
-  navigateToSection(fromFollowing ? "moi" : "bai-viet", {history: false, scroll: false});
+  const currentPage = document.querySelector("[data-page]:not([hidden])")?.dataset.page;
+  if (!["writing", "brief", "home"].includes(currentPage)) navigateToSection(fromFollowing ? "moi" : "bai-viet", {history: false, scroll: false});
   if ($("#drawer-backdrop").hidden) drawerReturnFocus = document.activeElement;
   if (updateURL) readerURL("article", cleanKey);
   const backdrop = $("#drawer-backdrop");
@@ -878,7 +887,9 @@ async function openArticleDrawer(postKey, updateURL = true) {
       }
     });
     const share = el("a", "inspect-btn", "Permalink bài viết"); share.href = location.href;
-    navBar.append(prevBtn, saveBtn, nextBtn, add, share);
+    const create = el("button", "hero-btn primary", "Tạo bài từ nguồn này"); create.type = "button";
+    create.addEventListener("click", () => BTIComposer.fromArticle(cleanKey));
+    navBar.append(create, prevBtn, saveBtn, nextBtn, add, share);
     body.append(navBar);
 
 
@@ -1180,7 +1191,7 @@ function composeBriefSquarePreview(brief, formatType, contentType) {
     const sec = brief.sections.market_digest || {};
     const items = sec.notable_articles || [];
     if (!sec.eligible || !items.length) {
-      return {eligible: false, title: null, body: `Chưa có bài công khai đủ điều kiện trong ${winVi} theo bộ lọc hiện tại. Hãy thử chuyển sang kỳ 30 ngày hoặc đặt lại bộ lọc.`};
+      return {eligible: false, title: null, body: `Chưa có bài công khai đủ điều kiện trong ${winVi} theo bộ lọc hiện tại. ${winMode === "7d" ? "Thử chọn 30 ngày hoặc bỏ bớt bộ lọc." : "Thử bỏ bớt bộ lọc hoặc chọn khoảng ngày khác."}`};
     }
     const topTags = cashtags((sec.top_assets || []).map(x => x.asset));
     const topTopics = (sec.top_topics || []).slice(0, 3).map(x => x.label_vi).join(", ");
@@ -1207,7 +1218,7 @@ function composeBriefSquarePreview(brief, formatType, contentType) {
     const sec = brief.sections.conditional_scenarios || {};
     const items = sec.items || [];
     if (!sec.eligible || !items.length) {
-      return {eligible: false, title: null, body: `Chưa có bài viết nào chứa mốc kích hoạt / vô hiệu rõ ràng trong ${winVi}. Hãy thử mở rộng sang 30 ngày hoặc xem tuyến Bản tin xu hướng.`};
+      return {eligible: false, title: null, body: `Chưa có bài chứa mốc kích hoạt / vô hiệu rõ ràng trong ${winVi}. ${winMode === "7d" ? "Thử chọn 30 ngày hoặc xem gợi ý Xu hướng thị trường." : "Xem gợi ý Xu hướng thị trường hoặc chọn khoảng ngày khác."}`};
     }
     const tags = cashtags(items.map(x => x.asset).filter(Boolean));
     const title = `Bản đồ kịch bản có điều kiện (${winVi})`;
@@ -1309,6 +1320,7 @@ function renderBriefStudio() {
   $("#brief-char-count").textContent = `${fmt(composed.body.length)} / ${fmt(limit)} ký tự`;
   $("#brief-copy-btn").disabled = !composed.eligible;
   $("#brief-download-md-btn").disabled = !composed.eligible;
+  $("#brief-use-btn").disabled = !composed.eligible;
 
   const sourceList = $("#brief-source-list");
   sourceList.replaceChildren();
@@ -1361,6 +1373,24 @@ function renderBriefStudio() {
   }
 }
 
+async function refreshTodaySources() {
+  const root = $("#today-suggestions");
+  try {
+    const data = await getJSON("/api/articles?sort=latest&limit=3");
+    root.replaceChildren();
+    if (!data.items.length) root.append(el("p", "empty", "Kho chưa có nguồn công khai. Bạn vẫn có thể tạo nháp trống và thêm nguồn khi có dữ liệu."));
+    for (const item of data.items) {
+      const card = el("article", "panel article-card");
+      card.append(el("h3", "", item.title), el("p", "sample-note", `${item.author} · Xuất bản gốc: ${when(item.published_at)}`));
+      const create = el("button", "hero-btn primary", "Tạo bài từ nguồn này"); create.type = "button";
+      create.addEventListener("click", () => BTIComposer.fromArticle(item.post_id));
+      const read = el("button", "inspect-btn", "Đọc nguồn"); read.type = "button";
+      read.addEventListener("click", () => openArticleDrawer(item.post_id));
+      const actions = el("div", "article-actions"); actions.append(create, read); card.append(actions); root.append(card);
+    }
+  } catch (_err) { sectionError("#today-suggestions", refreshTodaySources, "Chưa tải được nguồn gợi ý. Các bản nháp riêng của bạn vẫn dùng được."); }
+}
+
 function syncBriefCustomWindow() {
   const form = $("#brief-controls");
   if (!form) return;
@@ -1381,6 +1411,15 @@ async function refreshBriefFromControls(updateURL = true) {
   const apiHref = `/api/brief${query ? `?${query}` : ""}`;
   const rawLink = $("#brief-raw-api-link");
   if (rawLink) rawLink.href = apiHref;
+  currentBriefData = null;
+  $("#brief-use-btn").disabled = true;
+  $("#brief-copy-btn").disabled = true;
+  $("#brief-download-md-btn").disabled = true;
+  $("#brief-download-json-btn").disabled = true;
+  $("#brief-preview-body").textContent = "Đang tìm gợi ý theo bộ lọc…";
+  $("#brief-preview-title").hidden = true;
+  $("#brief-source-list").replaceChildren();
+  for (const link of $("#brief-downloads").querySelectorAll("a")) { URL.revokeObjectURL(link.href); link.remove(); }
   const seq = ++briefReqSeq;
   setBriefMessage("");
   try {
@@ -1388,11 +1427,14 @@ async function refreshBriefFromControls(updateURL = true) {
     if (seq !== briefReqSeq) return;
     currentBriefData = data;
     renderBriefStudio();
+    $("#brief-download-json-btn").disabled = false;
     if (!$("#square-brief")?.closest("[data-page]")?.hidden) {
       headerState(`Square Brief · ${fmt(data.sections?.market_digest?.sample_count ?? 0)} bài công khai · Chỉ đọc`);
     }
   } catch (err) {
     if (seq !== briefReqSeq) return;
+    setBriefMessage("Chưa tải được gợi ý. Thử lại trong phần Số liệu nguồn hoặc đổi bộ lọc.", true);
+    $("#brief-preview-body").textContent = "Không tải được dữ liệu cho bộ lọc hiện tại. Bản nháp riêng trong Bài viết của tôi không bị thay đổi.";
     sectionError("#brief-metrics", () => refreshBriefFromControls(false), `Không tổng hợp được gói nội dung (${err.message}).`);
   }
 }
@@ -1469,9 +1511,9 @@ function restoreRoute(initial = false, scroll = false) {
   }
   renderActiveArticleFilterBar();
   const kind = params.has("article") ? "article" : params.has("dossier") ? "dossier" : "";
-  let id = decodeURIComponent(location.hash.slice(1)) || "bai-viet";
+  let id = decodeURIComponent(location.hash.slice(1)) || "today";
   if (kind === "dossier") id = "ho-so";
-  else if (kind === "article" && sectionPages[id] !== "following") id = "bai-viet";
+  else if (kind === "article" && !["following", "writing", "brief", "home"].includes(sectionPages[id])) id = "bai-viet";
   const page = navigateToSection(id, {history: false, scroll: !initial && scroll, load: false});
   if (changed.has("a")) {
     // Invalidate a hidden page without starting its HTTP request.
@@ -1682,6 +1724,21 @@ async function bootResearch() {
       renderBriefStudio();
     });
   });
+  $("#brief-use-btn").addEventListener("click", async event => {
+    if (!currentBriefData) return;
+    const data = currentBriefData, format = briefFormat, type = briefContentType;
+    const composed = composeBriefSquarePreview(data, format, type);
+    if (!composed.eligible) return;
+    const section = data.sections;
+    const ids = format === "market_digest" ? section.market_digest.notable_articles.slice(0,4).map(x => x.post_id)
+      : format === "conditional_scenarios" ? section.conditional_scenarios.items.slice(0,4).map(x => x.post_id)
+      : section.creator_spotlights.items.slice(0,3).flatMap(x => (x.recent_articles || []).slice(0,1).map(a => a.post_id));
+    const b = event.currentTarget; b.disabled = true;
+    try {
+      await BTIComposer.fromSuggestion({title:composed.title || "",body:composed.body.replace(BRIEF_FOOTER_VI, "").replace(/\n{3,}/g, "\n\n").trim(),content_type:type}, ids.filter(Boolean),
+        () => currentBriefData === data && briefFormat === format && briefContentType === type);
+    } finally { if (currentBriefData === data) renderBriefStudio(); }
+  });
   $("#brief-copy-btn")?.addEventListener("click", async () => {
     if (!currentBriefData) return;
     const composed = composeBriefSquarePreview(currentBriefData, briefFormat, briefContentType);
@@ -1721,6 +1778,8 @@ async function bootResearch() {
     } else alert("Hãy xem hết các trang của danh sách theo dõi đã tải trước khi đánh dấu, để không bỏ qua bài chưa xem.");
   });
   BTIWorkspace.start({getJSON, openArticle: openArticleDrawer, loadNew: refreshNew, navigate: navigateToSection});
+  BTIComposer.start({getJSON, navigate:navigateToSection, openArticle:openArticleDrawer, clearReader:() => closeDrawer()});
+  lazySection("today", refreshTodaySources);
   lazySection("bai-viet", () => refreshArticlesFromControls(false, Number(new URL(location.href).searchParams.get("a.offset") || 0), false));
   lazySection("ho-so", () => refreshDossiersFromControls(false, Number(new URL(location.href).searchParams.get("d.offset") || 0), false));
   lazySection("bang-chung", () => refreshEvidence());

@@ -582,7 +582,7 @@
     window.addEventListener("beforeunload", event => { if (hasUnsaved()) { event.preventDefault(); event.returnValue = ""; } });
   }
   globalThis.BTIWorkspace = {
-    start, createStore, validateBackup, makeDraft, makeSquarePost, revalidate, snapshot, mergeBookmarks, missingPlanFields, assertUnchanged,
+    start, createStore, validateBackup, makeDraft, makeSquarePost, revalidate, snapshot, validateSnapshot, mergeBookmarks, missingPlanFields, assertUnchanged,
     activeId: () => store?.get().active_id || null,
     addArticle(item, evidenceId = null) {
       if (!store || !active()) { message("Hãy tạo/chọn một câu hỏi trước khi thêm nguồn.", true); navigate("workspace"); if (store) openCreate(); return false; }

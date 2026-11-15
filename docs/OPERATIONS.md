@@ -50,7 +50,7 @@ Verify both localhost and public HTTPS, asset hashes, report availability, priva
 paths returning 404 and mutations returning 405.
 
 For an AGPL network deployment, keep a prominent source offer pointing at the exact
-version being served. The v0.2.0 source link targets `v0.2.0`; publish the matching
+version being served. The v0.3.0 source link targets `v0.3.0`; publish the matching
 tag before reloading a new release. Do not expose credentials, raw captures
 or personal notes as part of the source offer. Keep an old origin reachable until
 users can explicitly export/import private browser research after a domain change.

@@ -8,35 +8,72 @@
   <link rel="stylesheet" href="/assets/style.css">
 </head>
 <body>
-  <a class="skip-link" href="#bai-viet">Đến nội dung chính</a>
+  <a class="skip-link" href="#main-content">Đến nội dung chính</a>
   <header class="topbar">
-    <a class="brand" href="#bai-viet" aria-label="Future Intelligence · intel.freqpilot.dev"><span class="brand-mark" aria-hidden="true">◈</span><span><b>FUTURE INTELLIGENCE</b><small>Đối chiếu bằng chứng Futures &amp; Copy Trading từ nguồn công khai</small></span></a>
+    <a class="brand" href="#today" aria-label="Future Intelligence · intel.freqpilot.dev"><span class="brand-mark" aria-hidden="true">◈</span><span><b>FUTURE INTELLIGENCE</b><small>Đối chiếu bằng chứng Futures &amp; Copy Trading từ nguồn công khai</small></span></a>
     <div class="topbar-status" role="status"><span class="live-dot"></span><span id="header-status">Kho công khai · Chỉ đọc</span></div>
-    <div class="topbar-actions"><button type="button" class="vi-priority-toggle" id="top-vi-priority-btn" title="Ưu tiên bài gốc Tiếng Việt, không tự dịch">Tiếng Việt trước</button></div>
+    <div class="topbar-actions"><button type="button" class="hero-btn primary" data-create-draft>Tạo bài Square</button><button type="button" class="vi-priority-toggle" id="top-vi-priority-btn" title="Ưu tiên bài gốc Tiếng Việt, không tự dịch">Tiếng Việt trước</button></div>
   </header>
   <div class="layout">
     <aside class="sidebar" aria-label="Điều hướng chính">
       <p class="nav-label">Không gian làm việc</p>
       <nav aria-label="Chức năng chính">
-        <a href="#bai-viet" class="nav-item active" data-view="bai-viet" aria-current="page"><span aria-hidden="true">◫</span>Khám phá</a>
-        <a href="#square-brief" class="nav-item" data-view="square-brief"><span aria-hidden="true">✦</span>Square Brief</a>
-        <a href="#ho-so" class="nav-item" data-view="ho-so"><span aria-hidden="true">◎</span>Nguồn</a>
-        <a href="#workspace" class="nav-item" data-view="workspace"><span aria-hidden="true">▤</span>Nghiên cứu</a>
-        <a href="#moi" class="nav-item" data-view="moi"><span aria-hidden="true">↻</span>Theo dõi</a>
-        <a href="#nguon" class="nav-item" data-view="nguon"><span aria-hidden="true">◇</span>Thêm</a>
+        <a href="#today" class="nav-item active" data-view="today" aria-current="page">Hôm nay</a>
+        <a href="#bai-viet" class="nav-item" data-view="bai-viet">Kho nguồn</a>
+        <a href="#my-posts" class="nav-item" data-view="my-posts">Bài viết</a>
+        <a href="#workspace" class="nav-item" data-view="workspace">Nghiên cứu</a>
+        <a href="#nguon" class="nav-item" data-view="nguon">Vận hành</a>
       </nav>
       <div class="guardrail"><b>Đọc để đối chiếu</b><p>Tương tác và giải nội dung không chứng minh lợi nhuận. Không giao dịch tự động.</p><a href="#cam-nang">Cách đọc bằng chứng →</a></div>
     </aside>
     <main id="main-content">
-      <section class="panel" id="campaign-snapshots" data-page="discover" aria-labelledby="campaign-snapshots-title">
-        <h2 id="campaign-snapshots-title">Hồ sơ và nghiên cứu Future &amp; Copy Trading</h2>
-        <p>Đối chiếu hồ sơ liên kết, phương pháp tác giả tự công bố và số liệu danh mục; tách khỏi thứ hạng bình chọn Blockchain 100. Các báo cáo là bản chụp có thời điểm và giới hạn bằng chứng, không tự cập nhật hoặc xác minh kỹ năng sinh lời.</p>
-        <div class="workspace-toolbar"><a class="hero-btn primary" href="/research/methods">Hồ sơ và phương pháp</a><a class="hero-btn secondary" href="/research/portfolios">Phân tích ba portfolio</a><a class="hero-btn secondary" href="#square-brief">✦ Bản tin &amp; nháp Square</a><a class="hero-btn secondary" href="/blockchain100/2026">Đề cử 2026</a><a class="hero-btn secondary" href="/blockchain100/2025">Hồ sơ và hoạt động 2025</a></div>
+      <section class="content-section" id="today" data-page="home" tabindex="-1">
+        <div class="section-heading"><div><h1>Hôm nay</h1><p>Chọn nguồn, viết và lưu bài riêng trên trình duyệt này.</p></div><button type="button" class="hero-btn primary" data-create-draft>Tạo bài Square</button></div>
+        <section class="home-section" aria-labelledby="today-drafts-title"><div class="section-heading"><h2 id="today-drafts-title">Bài viết gần đây</h2><a href="#my-posts">Tất cả bài viết</a></div><div id="today-drafts" class="draft-list"><p class="empty">Chưa có bản nháp trên trình duyệt này.</p></div></section>
+        <section class="home-section" aria-labelledby="today-suggestions-title"><div class="section-heading"><h2 id="today-suggestions-title">Nguồn cho bài viết</h2><a href="#square-brief">Gợi ý bài viết</a></div><div id="today-suggestions" class="article-grid"><p class="empty">Nguồn công khai sẽ xuất hiện sau khi tải dữ liệu.</p></div><p><a href="#bai-viet">Tìm trong kho nguồn</a></p></section>
       </section>
-      <section class="page-intro" id="tong-quan" data-page="discover">
-        <div><h1>Future Intelligence · Khám phá nội dung</h1><p>Tìm câu nguồn, đối chiếu điều kiện giao dịch và lập nghiên cứu riêng dựa trên bằng chứng.</p></div>
+      <section class="content-section" id="my-posts" data-page="drafts" hidden tabindex="-1">
+        <div class="section-heading"><div><h1>Bài viết của tôi</h1><p>Bản nháp và ghi chú chỉ lưu trên trình duyệt này, không đồng bộ hay gửi lên máy chủ. Tải bản sao trước khi xóa dữ liệu trình duyệt.</p></div><button type="button" class="hero-btn primary" data-create-draft>Tạo bài Square</button></div>
+        <label class="workspace-field draft-search">Tìm bản nháp<input id="draft-search" type="search" placeholder="Tìm theo tiêu đề hoặc nội dung"></label>
+        <div id="draft-library" class="draft-list" aria-live="polite"><p class="empty">Chưa có bản nháp trên trình duyệt này.</p></div>
+        <details class="secondary-disclosure"><summary>Sao lưu và chuyển thiết bị</summary><p>Bản sao JSON chứa cả ghi chú riêng. Hãy cất giữ ở nơi an toàn.</p><div class="workspace-toolbar"><button type="button" class="inspect-btn" id="draft-backup">Tải bản sao JSON</button><label class="import-control">Nhập bản sao JSON<input type="file" id="draft-import" accept=".json,application/json"></label></div></details>
       </section>
-      <div class="discover-layout" data-page="discover">
+      <section class="content-section" id="composer" data-page="writing" hidden tabindex="-1">
+        <header class="composer-heading"><div><h1>Soạn bài Square</h1><a href="#my-posts">Bài viết của tôi</a></div><p id="composer-save-state" role="status" aria-live="polite">Chưa lưu</p></header>
+        <p id="composer-message" class="workspace-message" role="status" aria-live="polite"></p>
+        <div class="composer-tabs" role="group" aria-label="Khung soạn bài">
+          <button type="button" data-composer-pane="sources" aria-controls="composer-sources-pane" aria-pressed="false">Nguồn</button>
+          <button type="button" data-composer-pane="editor" aria-controls="composer-editor-pane" aria-pressed="true">Soạn bài</button>
+          <button type="button" data-composer-pane="preview" aria-controls="composer-preview-pane" aria-pressed="false">Xem trước</button>
+        </div>
+        <div id="composer-layout" class="composer-layout" data-pane="editor">
+          <section class="panel composer-pane" id="composer-sources-pane" data-pane="sources" aria-labelledby="composer-sources-title">
+            <h2 id="composer-sources-title">Nguồn tham khảo</h2><p class="sample-note">Nguồn chưa được xác minh độc lập. Đọc bản gốc và giới hạn bằng chứng trước khi sử dụng.</p>
+            <div id="composer-sources" class="composer-source-list"></div>
+            <label class="workspace-field">Tìm nguồn<input type="search" id="composer-source-search" placeholder="Từ khóa, tài sản hoặc tác giả"></label>
+            <button type="button" class="inspect-btn" id="composer-source-find">Tìm nguồn</button><div id="composer-source-results" class="composer-source-list" aria-live="polite"></div><p><a href="#bai-viet">Tìm trong kho nguồn</a></p>
+          </section>
+          <section class="panel composer-pane composer-editor" id="composer-editor-pane" data-pane="editor" aria-labelledby="composer-editor-title">
+            <h2 id="composer-editor-title">Nội dung bài viết</h2>
+            <label class="workspace-field">Tiêu đề<input id="composer-title" maxlength="120" placeholder="Tiêu đề bài viết"></label>
+            <label class="workspace-field">Kiểu bài<select id="composer-type"><option value="1">Bài ngắn</option><option value="2">Bài dài</option></select></label>
+            <label class="workspace-field">Nội dung<textarea id="composer-body" maxlength="15000" rows="14" placeholder="Viết góc nhìn của bạn, đối chiếu với nguồn tham khảo…"></textarea></label>
+            <details class="composer-notes"><summary>Ghi chú riêng</summary><label class="workspace-field">Không đưa vào bài xuất<textarea id="composer-notes" maxlength="4000" rows="4"></textarea></label></details>
+          </section>
+          <section class="panel composer-pane" id="composer-preview-pane" data-pane="preview" aria-labelledby="composer-preview-heading">
+            <h2 id="composer-preview-heading">Xem trước bài xuất</h2><h3 id="composer-preview-title"></h3><pre id="composer-preview-body"></pre><p id="composer-count" class="sample-note">0 ký tự</p><div id="composer-checks" role="status" aria-live="polite"></div><p class="sample-note">Chỉ sao chép hoặc tải về. Trang web không tự đăng bài.</p>
+          </section>
+        </div>
+        <div id="composer-actions" class="composer-actions" aria-label="Thao tác bản nháp">
+          <button type="button" class="hero-btn secondary" id="composer-save">Lưu nháp</button><button type="button" class="hero-btn primary" id="composer-copy">Sao chép bài</button><button type="button" class="inspect-btn" id="composer-export">Tải bài .txt</button>
+          <button type="button" class="inspect-btn" id="composer-recovery" hidden>Tải nội dung chưa lưu</button><button type="button" class="inspect-btn" id="composer-refresh" hidden>Nạp bản đã lưu</button><div id="composer-downloads" class="workspace-toolbar" aria-label="Bài tải xuống đã chuẩn bị"></div>
+        </div>
+      </section>
+      <section class="page-intro" id="tong-quan" data-page="discover" hidden>
+        <div><h1>Kho nguồn</h1><p>Tìm và đối chiếu nguồn công khai trước khi viết.</p></div>
+        <nav class="library-nav" aria-label="Khám phá kho nguồn"><a href="#ho-so">Hồ sơ nguồn</a><a href="#moi">Theo dõi cập nhật</a><a href="#square-brief">Gợi ý bài viết</a></nav>
+      </section>
+      <div class="discover-layout" data-page="discover" hidden>
         <section class="content-section" id="bai-viet" aria-label="Tìm và đọc bài viết" tabindex="-1">
           <form class="research-controls article-controls-grid" id="article-controls">
             <input type="hidden" name="entity" value="">
@@ -76,12 +113,18 @@
         </section>
         <aside class="research-context panel" id="research-context" aria-label="Nghiên cứu đang làm"><div id="research-context-content"><h2>Nghiên cứu của bạn</h2><p>Đặt câu hỏi rồi chọn bài làm căn cứ.</p><a class="hero-btn primary" href="#workspace">Tạo nghiên cứu</a></div></aside>
       </div>
+      <details class="secondary-disclosure" id="campaign-snapshots" data-page="discover" hidden aria-labelledby="campaign-snapshots-title">
+        <summary id="campaign-snapshots-title">Báo cáo hồ sơ và nghiên cứu Future &amp; Copy Trading</summary>
+        <p>Đối chiếu hồ sơ liên kết, phương pháp tác giả tự công bố và số liệu danh mục; tách khỏi thứ hạng bình chọn Blockchain 100. Các báo cáo là bản chụp có thời điểm và giới hạn bằng chứng, không tự cập nhật hoặc xác minh kỹ năng sinh lời.</p>
+        <div class="workspace-toolbar"><a class="hero-btn secondary" href="/research/methods">Hồ sơ và phương pháp</a><a class="hero-btn secondary" href="/research/portfolios">Phân tích ba portfolio</a><a class="hero-btn secondary" href="/blockchain100/2026">Đề cử 2026</a><a class="hero-btn secondary" href="/blockchain100/2025">Hồ sơ và hoạt động 2025</a></div>
+      </details>
 
       <section class="content-section" id="square-brief" data-page="brief" hidden tabindex="-1">
         <div class="section-heading">
-          <div><p class="eyebrow">TỔNG HỢP CÓ KIỂM CHỨNG · CHỈ ĐỌC TRÊN WEB</p><h1>Bản tin &amp; Gói nội dung Square</h1></div>
-          <p>Tổng hợp xu hướng $TICKER, kịch bản có điều kiện và hồ sơ 3 trụ cột từ kho công khai để dựng bản nháp chuẩn Binance Square hoặc tải gói <code>bti-intelligence-brief-v1</code> cho bộ xuất bản độc lập. Trang web không tự đăng bài.</p>
+          <div><h1>Gợi ý bài viết</h1></div>
+          <p>Chọn một góc viết từ kho công khai rồi chỉnh sửa trong bản nháp riêng. Nguồn chưa được xác minh độc lập; đây không phải khuyến nghị đầu tư.</p>
         </div>
+        <details class="secondary-disclosure" id="brief-filter-panel"><summary>Chọn thời gian, chủ đề và nguồn</summary>
         <form class="research-controls brief-controls-grid" id="brief-controls">
           <label>Kỳ bài xuất bản (UTC)<select name="window" id="brief-window-select"><option value="7d">7 ngày gần nhất</option><option value="30d" selected>30 ngày gần nhất</option><option value="custom">Tùy chọn ngày</option></select></label>
           <label>Tài sản<input name="asset" id="brief-asset-input" maxlength="20" placeholder="BTC, ETH…"></label>
@@ -90,54 +133,53 @@
           <label>Số mục tối đa<select name="max_items"><option value="4">4 mục</option><option value="6" selected>6 mục</option><option value="10">10 mục</option></select></label>
           <label class="brief-custom-window" hidden>Từ ngày (UTC)<input name="date_from" type="date" disabled></label>
           <label class="brief-custom-window" hidden>Đến ngày (UTC)<input name="date_to" type="date" disabled></label>
-          <div class="control-buttons-row"><button type="submit">Tổng hợp gói</button><button type="button" class="reset-filter-btn" id="brief-reset-btn">Đặt lại</button></div>
+          <div class="control-buttons-row"><button type="submit">Tìm gợi ý</button><button type="button" class="reset-filter-btn" id="brief-reset-btn">Đặt lại</button></div>
         </form>
+        </details>
         <p class="workspace-message" id="brief-message" role="status" aria-live="polite"></p>
-        <section class="metrics" id="brief-metrics" aria-label="Thống kê gói nội dung"><p class="empty">Đang tổng hợp gói dữ liệu từ kho công khai…</p></section>
+        <details class="secondary-disclosure"><summary>Số liệu nguồn trong kỳ</summary><section class="metrics" id="brief-metrics" aria-label="Thống kê nguồn"><p class="empty">Đang tổng hợp dữ liệu từ kho công khai…</p></section></details>
         <div class="pill-group" id="brief-asset-pills" aria-label="Tài sản hợp lệ trong kỳ"></div>
         <div class="brief-studio-grid">
           <section class="panel brief-composer" aria-labelledby="brief-composer-title">
             <div class="brief-composer-head">
               <div>
-                <span class="eyebrow">KHUNG SOẠN BẢN NHÁP CÓ DẪN NGUỒN</span>
-                <h2 id="brief-composer-title">Xem trước định dạng Binance Square</h2>
+                <span class="eyebrow">GÓC VIẾT CÓ DẪN NGUỒN</span>
+                <h2 id="brief-composer-title">Gợi ý nội dung</h2>
               </div>
               <div class="pill-group" id="brief-type-tabs" role="group" aria-label="Kiểu bài Square">
-                <button type="button" class="filter-chip active" data-content-type="1">Bài ngắn (Short Post)</button>
-                <button type="button" class="filter-chip" data-content-type="2">Bài dài (Article)</button>
+                <button type="button" class="filter-chip active" data-content-type="1">Bài ngắn</button>
+                <button type="button" class="filter-chip" data-content-type="2">Bài dài</button>
               </div>
             </div>
             <div class="pill-group" id="brief-format-tabs" role="tablist" aria-label="Tuyến nội dung Square">
-              <button type="button" class="filter-chip active" data-brief-format="market_digest">📊 Bản tin xu hướng</button>
-              <button type="button" class="filter-chip" data-brief-format="conditional_scenarios">🗺️ Kịch bản có điều kiện</button>
-              <button type="button" class="filter-chip" data-brief-format="creator_spotlight">🔍 Đối chiếu 3 trụ cột</button>
+              <button type="button" class="filter-chip active" data-brief-format="market_digest">Xu hướng thị trường</button>
+              <button type="button" class="filter-chip" data-brief-format="conditional_scenarios">Kịch bản có điều kiện</button>
+              <button type="button" class="filter-chip" data-brief-format="creator_spotlight">Góc nhìn tác giả</button>
             </div>
             <div class="brief-guardrail-bar" id="brief-guardrail-bar">
-              <span class="status-pill">✓ Khóa $TICKER theo nguồn</span>
-              <span class="status-pill">✓ Trích đoạn ≤ 24 từ</span>
-              <span class="status-pill warn">Không phải tín hiệu giao dịch</span>
+              <span class="sample-note">Đọc nguồn gốc để tự đối chiếu. Không phải tín hiệu giao dịch.</span>
               <span class="brief-char-count" id="brief-char-count">0 ký tự</span>
             </div>
             <div class="brief-preview-box">
               <h3 class="brief-preview-title" id="brief-preview-title" hidden></h3>
               <pre class="brief-preview-body" id="brief-preview-body">Đang chuẩn bị bản nháp…</pre>
             </div>
-            <div class="workspace-toolbar">
-              <button type="button" class="hero-btn primary" id="brief-copy-btn">Sao chép văn bản Square</button>
-              <button type="button" class="hero-btn secondary" id="brief-download-md-btn">Tải bản nháp (.md)</button>
-              <button type="button" class="inspect-btn" id="brief-download-json-btn">Tải gói Brief JSON (Studio CLI)</button>
-              <a class="export-link" id="brief-raw-api-link" href="/api/brief?window=30d" target="_blank" rel="noopener">Mở API JSON ↗</a>
-            </div>
-            <div class="workspace-toolbar" id="brief-downloads" aria-label="Gói tải xuống đã chuẩn bị"></div>
-            <details class="secondary-disclosure">
-              <summary>Kết nối với bộ xuất bản độc lập (FreqPilot Square Studio)</summary>
-              <p>Giao diện web này chỉ đọc dữ liệu công khai và không giữ khóa OpenAPI hay tự đăng bài. Để sinh bài nâng cao hoặc lập lịch đăng qua Binance Square OpenAPI chính thức, dùng gói JSON ở trên với công cụ CLI tách rời: <code>python -m square_studio generate --brief-file brief.json</code> hoặc kết nối trực tiếp cơ sở dữ liệu chỉ đọc.</p>
+            <div class="workspace-toolbar"><button type="button" class="hero-btn primary" id="brief-use-btn" disabled>Soạn từ gợi ý này</button></div>
+            <details class="secondary-disclosure"><summary>Sao chép, tải xuống và công cụ kỹ thuật</summary>
+              <div class="workspace-toolbar">
+                <button type="button" class="hero-btn secondary" id="brief-copy-btn">Sao chép gợi ý</button>
+                <button type="button" class="hero-btn secondary" id="brief-download-md-btn">Tải gợi ý (.md)</button>
+                <button type="button" class="inspect-btn" id="brief-download-json-btn">Tải dữ liệu JSON</button>
+                <a class="export-link" id="brief-raw-api-link" href="/api/brief?window=30d" target="_blank" rel="noopener">Mở API JSON</a>
+              </div>
+              <div class="workspace-toolbar" id="brief-downloads" aria-label="Gói tải xuống đã chuẩn bị"></div>
+              <p>Web không giữ khóa OpenAPI hay tự đăng bài. Công cụ FreqPilot Square Studio độc lập có thể đọc JSON: <code>python -m square_studio generate --brief-file brief.json</code>.</p>
             </details>
           </section>
           <aside class="panel brief-evidence-panel" aria-labelledby="brief-evidence-title">
-            <span class="eyebrow">CHỨNG CỨ NGUỒN ĐANG DÙNG</span>
-            <h2 id="brief-evidence-title">Nguồn trích dẫn trong tuyến bài này</h2>
-            <p class="sample-note" id="brief-evidence-note">Mỗi phát biểu bên trái đều liên kết trực tiếp về bài viết hoặc hồ sơ gốc bên dưới.</p>
+            <span class="eyebrow">NGUỒN THAM KHẢO</span>
+            <h2 id="brief-evidence-title">Nguồn của gợi ý</h2>
+            <p class="sample-note" id="brief-evidence-note">Đọc bài gốc và giới hạn bằng chứng trước khi đưa nhận định vào bài viết.</p>
             <div class="brief-source-list" id="brief-source-list"></div>
           </aside>
         </div>
@@ -212,12 +254,12 @@
         <section class="content-section" id="cam-nang"><div class="section-heading"><h2>Đọc bằng chứng đúng cách</h2></div><div class="glossary-grid"><article class="panel glossary-card"><span class="status-pill">TƯƠNG TÁC</span><h3>Được chú ý ≠ có lợi nhuận</h3><p>Lượt xem, thích và bình luận đo sức hút nội dung. Không tự chứng minh nhận định đúng hoặc giao dịch có lãi.</p></article><article class="panel glossary-card"><span class="status-pill warn">HIỆU SUẤT</span><h3>Phân biệt nền tảng và tự công bố</h3><p>Giữ riêng lợi nhuận của người dẫn và người sao chép. Ảnh PnL hoặc lời tự khai không phải bằng chứng đã xác minh độc lập.</p></article><article class="panel glossary-card"><span class="status-pill">CÔNG NHẬN</span><h3>Giải nội dung ≠ giải giao dịch</h3><p>Blockchain 100 vinh danh nhà sáng tạo và sức ảnh hưởng. Không phải chứng nhận kiểm toán lợi nhuận hay kỹ năng giao dịch bền vững.</p></article></div></section>
         <div class="workspace-toolbar"><a class="export-link" href="/api/export.json" target="_blank" rel="noopener">Xuất kho công khai JSON ↗</a><a class="export-link" href="/api/brief?window=7d" target="_blank" rel="noopener">Xuất gói Square Brief 7 ngày JSON ↗</a></div><p class="sample-note">Bản xuất kho không chứa ghi chú nghiên cứu riêng trong trình duyệt.</p>
       </div>
-      <footer><p><a href="https://github.com/mrcanlaco/freqpilot-intel/tree/v0.2.0" target="_blank" rel="noopener">Mã nguồn đang chạy v0.2.0 (AGPL-3.0)</a> · © 2026 FreqPilot Intel contributors · Phần mềm không kèm bảo đảm.</p><p>Future Intelligence (intel.freqpilot.dev) · Dự án nghiên cứu độc lập, không đại diện cho Binance.</p><p>Không phải khuyến nghị đầu tư. Không tự xuất bản hay giao dịch.</p></footer>
+      <footer><p><a href="https://github.com/mrcanlaco/freqpilot-intel/tree/v0.3.0" target="_blank" rel="noopener">Mã nguồn đang chạy v0.3.0 (AGPL-3.0)</a> · © 2026 FreqPilot Intel contributors · Phần mềm không kèm bảo đảm.</p><p>Future Intelligence (intel.freqpilot.dev) · Dự án nghiên cứu độc lập, không đại diện cho Binance.</p><p>Không phải khuyến nghị đầu tư. Không tự xuất bản hay giao dịch.</p></footer>
     </main>
   </div>
   <div class="compare-tray" id="compare-tray" hidden><div class="compare-tray-info"><strong>Đối chiếu nguồn (<span id="compare-count">0</span>/3)</strong><div class="compare-chips" id="compare-chips"></div></div><div class="compare-tray-actions"><button type="button" class="hero-btn primary" id="open-compare-btn">Mở so sánh</button><button type="button" class="reset-filter-btn" id="clear-compare-btn">Bỏ chọn</button></div></div>
   <div class="drawer-backdrop" id="drawer-backdrop" hidden><aside class="detail-drawer" id="detail-drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title"><div class="drawer-header"><div><span class="eyebrow" id="drawer-eyebrow">NGUỒN VÀ BẰNG CHỨNG</span><h2 id="drawer-title">Đang tải…</h2></div><button type="button" class="drawer-close" id="drawer-close" aria-label="Đóng cửa sổ chi tiết">✕ Đóng</button></div><div class="drawer-body" id="drawer-body"></div></aside></div>
   <div class="action-status" id="action-status" hidden><p id="action-status-text" role="status" aria-live="polite"></p><button type="button" id="action-status-dismiss" aria-label="Đóng thông báo">×</button></div>
-  <script src="/assets/workspace.js" defer></script><script src="/assets/app.js" defer></script>
+  <script src="/assets/workspace.js" defer></script><script src="/assets/drafts.js" defer></script><script src="/assets/composer.js" defer></script><script src="/assets/app.js" defer></script>
 </body>
 </html>

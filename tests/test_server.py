@@ -11,7 +11,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from bti.db import init_db
-from bti.server import REJECTED_BODY_DRAIN_LIMIT, create_server
+from bti.server import REJECTED_BODY_DRAIN_LIMIT, STATIC_TYPES, create_server
 
 TEST_TMP = Path(__file__).resolve().parents[1] / "runtime" / "test-tmp"
 
@@ -148,7 +148,7 @@ class ServerSecurityTests(unittest.TestCase):
     def test_static_release_stays_coherent_until_restart(self) -> None:
         assets = Path(self.temp.name) / "assets"
         assets.mkdir()
-        for name in ("index.html", "style.css", "app.js", "workspace.js"):
+        for name in STATIC_TYPES:
             (assets / name).write_bytes(f"release-one:{name}".encode())
         with patch("bti.server.STATIC_DIR", assets):
             server = create_server(self.db, "127.0.0.1", 0)

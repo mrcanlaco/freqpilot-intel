@@ -20,6 +20,8 @@ STATIC_TYPES = {
     "style.css": "text/css; charset=utf-8",
     "app.js": "text/javascript; charset=utf-8",
     "workspace.js": "text/javascript; charset=utf-8",
+    "drafts.js": "text/javascript; charset=utf-8",
+    "composer.js": "text/javascript; charset=utf-8",
 }
 SECURITY_HEADERS = {
     "Content-Security-Policy": "default-src 'self'; img-src 'self' https: data:; style-src 'self'; script-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'",
@@ -90,6 +92,10 @@ class Handler(BaseHTTPRequestHandler):
                 self._static("app.js", head=head)
             elif path == "/assets/workspace.js":
                 self._static("workspace.js", head=head)
+            elif path == "/assets/drafts.js":
+                self._static("drafts.js", head=head)
+            elif path == "/assets/composer.js":
+                self._static("composer.js", head=head)
             elif path in self.app.campaign_assets:
                 body, content_type, csp = self.app.campaign_assets[path]
                 self._send(body, content_type, head=head, csp=csp)
