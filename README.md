@@ -13,7 +13,23 @@ official recognition. A content award is not audited trading performance; missin
 evidence stays unknown. Deterministic keyword labels are not AI translations or
 validated investment signals.
 
-## v0.3.0: Source-to-draft workspace
+## v0.4.0: Original Binance images
+
+- Source cards and the reader display captured post images directly from the
+  original Binance CDN. The server stores URLs only: no image hosting, image
+  proxy, substitute images or automatic retries around a blocked CDN.
+  **Hôm nay** suggests collected sources with images; the full source library
+  continues to include text-only posts without inventing cover images.
+- In the composer, select up to four images from cited sources. Selected links
+  appear in the preview, local draft thumbnails and private backup. Existing v1
+  text drafts remain readable and migrate on explicit save.
+- Text-only drafts export `.txt`. Image drafts export `bti-square-post-v1` JSON
+  containing post text, original image URLs and source attribution/revision.
+  Clipboard still copies text only; neither format posts or embeds images into
+  Square automatically. Private notes are excluded from post exports.
+- Export rechecks both source permissions/revisions and image membership in the
+  current captured source. Original remote image bytes may change or disappear;
+  a captured URL is not an immutable copy or a license to republish.
 
 - **Hôm nay** is the starting page. Pick a public source or choose **Tạo bài Square**.
   The five primary destinations separate sources, drafts, research and operations.
@@ -22,7 +38,7 @@ validated investment signals.
 - Drafts autosave in this browser and appear in **Bài viết**. Search, reopen,
   delete or export/import a private JSON backup. There is no cross-device sync.
   Storage failures preserve the saved draft and pending text with a recovery download.
-- Copy or download `.txt` only after rechecking public permission and exact source
+- Copy or export only after rechecking public permission and exact source
   revisions. Authored text stays yours; private notes never enter the post.
 - **Kho nguồn → Gợi ý bài viết** retains deterministic Vietnamese templates
   (not AI). Choose **Soạn từ gợi ý này** to create an independent editable draft;
@@ -93,7 +109,8 @@ node --check src/bti/static/app.js
 node --check src/bti/static/workspace.js
 node --check src/bti/static/drafts.js
 node --check src/bti/static/composer.js
-node --test tests/test_workspace.js tests/test_drafts.js
+node --check src/bti/static/images.js
+node --test tests/test_workspace.js tests/test_drafts.js tests/test_images.js
 ```
 
 CI also exercises the signed executor protocol, hybrid shared authority, bounded
@@ -108,6 +125,9 @@ them private. Export before changing browsers or hostnames, then import at the n
 origin. Clearing site data removes local drafts. No draft text or private note is
 sent to the server; the public export API cannot include them. Research and draft
 stores are independent, so this update does not migrate or overwrite existing plans.
+Viewing source images sends an ordinary image request directly from the viewer's
+browser to Binance's CDN, with no referrer. The CDN sees the viewer's IP address.
+No private draft text is included in these requests.
 
 Database, credentials, raw captures and generated reports remain ignored. Review
 the [operations guide](docs/OPERATIONS.md) before exposing the loopback app through

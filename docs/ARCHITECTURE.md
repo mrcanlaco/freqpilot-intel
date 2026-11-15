@@ -8,14 +8,21 @@ permission-checked public projection → research workspace/export.
 
 - `ingest.py`: HTTPS allowlist, source parsing, identity checks and versioning.
 - `db.py`: SQLite schema, provenance links and public-shareable flags.
+- `images.py`: bounded original-CDN URL extraction, image-aware revision identity
+  and a hash/UID-bound offline URL index for retained captures. The derived index
+  never writes the canonical database and does not replace live permission checks.
 - `public.py` / `research.py`: live authorization, conservative source excerpts,
   filters, pagination and auditable research fields.
 - `brief.py`: permission-checked, bounded intelligence brief export (`bti-intelligence-brief-v1`) for downstream tools; no automatic publishing.
 - `server.py` / `static/`: loopback read-only HTTP and browser-local personal plans.
 - `static/drafts.js`: bounded browser-local draft storage, atomic saves, merge-only
   backup imports and post rendering without private notes.
+- `static/images.js`: safe direct-image galleries with a non-retrying failure
+  state. No server image fetch, proxy, binary storage or upload endpoint.
 - `static/composer.js`: source/editor/preview UI, local autosave and live source
-  revalidation before post export. Async reads cannot replace intervening edits.
+  and selected-image membership checks before export. Async reads cannot replace
+  intervening edits. Draft schema v2 adds source-bound image URLs; v1 reads migrate
+  without overwriting saved bytes.
 - `worker.py` / `content_volume.py`: single-writer scheduling, source gates,
   archive provenance, durable cooldowns and bounded diagnostics.
 - `backup.py`: integrity-checked online backups and scoped retention.

@@ -30,7 +30,7 @@
       <section class="content-section" id="today" data-page="home" tabindex="-1">
         <div class="section-heading"><div><h1>Hôm nay</h1><p>Chọn nguồn, viết và lưu bài riêng trên trình duyệt này.</p></div><button type="button" class="hero-btn primary" data-create-draft>Tạo bài Square</button></div>
         <section class="home-section" aria-labelledby="today-drafts-title"><div class="section-heading"><h2 id="today-drafts-title">Bài viết gần đây</h2><a href="#my-posts">Tất cả bài viết</a></div><div id="today-drafts" class="draft-list"><p class="empty">Chưa có bản nháp trên trình duyệt này.</p></div></section>
-        <section class="home-section" aria-labelledby="today-suggestions-title"><div class="section-heading"><h2 id="today-suggestions-title">Nguồn cho bài viết</h2><a href="#square-brief">Gợi ý bài viết</a></div><div id="today-suggestions" class="article-grid"><p class="empty">Nguồn công khai sẽ xuất hiện sau khi tải dữ liệu.</p></div><p><a href="#bai-viet">Tìm trong kho nguồn</a></p></section>
+        <section class="home-section" aria-labelledby="today-suggestions-title"><div class="section-heading"><h2 id="today-suggestions-title">Nguồn có ảnh để soạn bài</h2><a href="#square-brief">Gợi ý bài viết</a></div><div id="today-suggestions" class="article-grid"><p class="empty">Nguồn công khai có link ảnh sẽ xuất hiện sau khi tải dữ liệu.</p></div><p><a href="#bai-viet">Tìm tất cả bài trong kho nguồn</a></p></section>
       </section>
       <section class="content-section" id="my-posts" data-page="drafts" hidden tabindex="-1">
         <div class="section-heading"><div><h1>Bài viết của tôi</h1><p>Bản nháp và ghi chú chỉ lưu trên trình duyệt này, không đồng bộ hay gửi lên máy chủ. Tải bản sao trước khi xóa dữ liệu trình duyệt.</p></div><button type="button" class="hero-btn primary" data-create-draft>Tạo bài Square</button></div>
@@ -58,10 +58,16 @@
             <label class="workspace-field">Tiêu đề<input id="composer-title" maxlength="120" placeholder="Tiêu đề bài viết"></label>
             <label class="workspace-field">Kiểu bài<select id="composer-type"><option value="1">Bài ngắn</option><option value="2">Bài dài</option></select></label>
             <label class="workspace-field">Nội dung<textarea id="composer-body" maxlength="15000" rows="14" placeholder="Viết góc nhìn của bạn, đối chiếu với nguồn tham khảo…"></textarea></label>
+            <section class="composer-media" aria-labelledby="composer-image-heading">
+              <h3 id="composer-image-heading">Ảnh bài viết <span id="composer-image-count">0 / 4</span></h3>
+              <div id="composer-selected-images"></div>
+              <details id="composer-image-picker" open><summary>Chọn ảnh từ bài nguồn</summary><div id="composer-image-options" class="composer-media-options"></div></details>
+              <p class="sample-note">Tối đa 4 ảnh, chỉ lưu link CDN Binance, không lưu file trên máy chủ. Ảnh thuộc chủ sở hữu nguồn; chỉ đăng lại khi bạn có quyền. Ảnh tải trực tiếp có thể thay đổi hoặc hết hiệu lực.</p>
+            </section>
             <details class="composer-notes"><summary>Ghi chú riêng</summary><label class="workspace-field">Không đưa vào bài xuất<textarea id="composer-notes" maxlength="4000" rows="4"></textarea></label></details>
           </section>
           <section class="panel composer-pane" id="composer-preview-pane" data-pane="preview" aria-labelledby="composer-preview-heading">
-            <h2 id="composer-preview-heading">Xem trước bài xuất</h2><h3 id="composer-preview-title"></h3><pre id="composer-preview-body"></pre><p id="composer-count" class="sample-note">0 ký tự</p><div id="composer-checks" role="status" aria-live="polite"></div><p class="sample-note">Chỉ sao chép hoặc tải về. Trang web không tự đăng bài.</p>
+            <h2 id="composer-preview-heading">Xem trước bài xuất</h2><h3 id="composer-preview-title"></h3><div id="composer-preview-images"></div><pre id="composer-preview-body"></pre><p id="composer-count" class="sample-note">0 ký tự</p><div id="composer-checks" role="status" aria-live="polite"></div><p class="sample-note">Clipboard chỉ chứa chữ. Gói JSON giữ link ảnh và dẫn nguồn, không phải file ảnh hay thao tác đăng bài.</p>
           </section>
         </div>
         <div id="composer-actions" class="composer-actions" aria-label="Thao tác bản nháp">
@@ -254,12 +260,12 @@
         <section class="content-section" id="cam-nang"><div class="section-heading"><h2>Đọc bằng chứng đúng cách</h2></div><div class="glossary-grid"><article class="panel glossary-card"><span class="status-pill">TƯƠNG TÁC</span><h3>Được chú ý ≠ có lợi nhuận</h3><p>Lượt xem, thích và bình luận đo sức hút nội dung. Không tự chứng minh nhận định đúng hoặc giao dịch có lãi.</p></article><article class="panel glossary-card"><span class="status-pill warn">HIỆU SUẤT</span><h3>Phân biệt nền tảng và tự công bố</h3><p>Giữ riêng lợi nhuận của người dẫn và người sao chép. Ảnh PnL hoặc lời tự khai không phải bằng chứng đã xác minh độc lập.</p></article><article class="panel glossary-card"><span class="status-pill">CÔNG NHẬN</span><h3>Giải nội dung ≠ giải giao dịch</h3><p>Blockchain 100 vinh danh nhà sáng tạo và sức ảnh hưởng. Không phải chứng nhận kiểm toán lợi nhuận hay kỹ năng giao dịch bền vững.</p></article></div></section>
         <div class="workspace-toolbar"><a class="export-link" href="/api/export.json" target="_blank" rel="noopener">Xuất kho công khai JSON ↗</a><a class="export-link" href="/api/brief?window=7d" target="_blank" rel="noopener">Xuất gói Square Brief 7 ngày JSON ↗</a></div><p class="sample-note">Bản xuất kho không chứa ghi chú nghiên cứu riêng trong trình duyệt.</p>
       </div>
-      <footer><p><a href="https://github.com/mrcanlaco/freqpilot-intel/tree/v0.3.0" target="_blank" rel="noopener">Mã nguồn đang chạy v0.3.0 (AGPL-3.0)</a> · © 2026 FreqPilot Intel contributors · Phần mềm không kèm bảo đảm.</p><p>Future Intelligence (intel.freqpilot.dev) · Dự án nghiên cứu độc lập, không đại diện cho Binance.</p><p>Không phải khuyến nghị đầu tư. Không tự xuất bản hay giao dịch.</p></footer>
+      <footer><p><a href="https://github.com/mrcanlaco/freqpilot-intel/tree/v0.4.0" target="_blank" rel="noopener">Mã nguồn đang chạy v0.4.0 (AGPL-3.0)</a> · © 2026 FreqPilot Intel contributors · Phần mềm không kèm bảo đảm.</p><p>Future Intelligence (intel.freqpilot.dev) · Dự án nghiên cứu độc lập, không đại diện cho Binance.</p><p>Không phải khuyến nghị đầu tư. Không tự xuất bản hay giao dịch.</p></footer>
     </main>
   </div>
   <div class="compare-tray" id="compare-tray" hidden><div class="compare-tray-info"><strong>Đối chiếu nguồn (<span id="compare-count">0</span>/3)</strong><div class="compare-chips" id="compare-chips"></div></div><div class="compare-tray-actions"><button type="button" class="hero-btn primary" id="open-compare-btn">Mở so sánh</button><button type="button" class="reset-filter-btn" id="clear-compare-btn">Bỏ chọn</button></div></div>
   <div class="drawer-backdrop" id="drawer-backdrop" hidden><aside class="detail-drawer" id="detail-drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title"><div class="drawer-header"><div><span class="eyebrow" id="drawer-eyebrow">NGUỒN VÀ BẰNG CHỨNG</span><h2 id="drawer-title">Đang tải…</h2></div><button type="button" class="drawer-close" id="drawer-close" aria-label="Đóng cửa sổ chi tiết">✕ Đóng</button></div><div class="drawer-body" id="drawer-body"></div></aside></div>
   <div class="action-status" id="action-status" hidden><p id="action-status-text" role="status" aria-live="polite"></p><button type="button" id="action-status-dismiss" aria-label="Đóng thông báo">×</button></div>
-  <script src="/assets/workspace.js" defer></script><script src="/assets/drafts.js" defer></script><script src="/assets/composer.js" defer></script><script src="/assets/app.js" defer></script>
+  <script src="/assets/workspace.js" defer></script><script src="/assets/images.js" defer></script><script src="/assets/drafts.js" defer></script><script src="/assets/composer.js" defer></script><script src="/assets/app.js" defer></script>
 </body>
 </html>

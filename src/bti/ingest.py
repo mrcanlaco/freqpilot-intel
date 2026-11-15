@@ -19,6 +19,7 @@ from pathlib import Path
 from typing import Any, Callable, Iterable
 
 from .db import connect, init_db, public_excerpt, utc_now
+from .images import content_image_checksum, extract_post_images, image_urls
 from .research import research_brief, store_source_claim
 
 USER_AGENT = "BinanceTraderIntelligence/0.1 (+public evidence research; no trading)"
@@ -511,6 +512,8 @@ def parse_square_feed(result: FetchResult, source: dict[str, Any]) -> list[Parse
             "denominator": "views" if row.get("viewCount") is not None else None,
         }
         metadata = {
+            "image_urls": extract_post_images(row),
+            "source_uid": compact_text(row.get("squareUid")) or None,
             "engagement": engagement,
             "author_verified": bool(row.get("authorIsVerified")),
             "author_verification_type": row.get("authorVerificationType"),
@@ -589,6 +592,7 @@ def parse_square_detail(result: FetchResult, source: dict[str, Any]) -> list[Par
         published_at=published_at,
         language=row.get("language") or row.get("detectedLanguage"),
         metadata={
+            "image_urls": extract_post_images(row),
             "engagement": {"views": row.get("viewCount"), "likes": row.get("likeCount"), "comments": row.get("commentCount"), "shares": row.get("shareCount"), "followers": None},
             "official_detail": source.get("source_type") == "binance_official_program",
             "content_origin": "creator_post" if source.get("historical_backfill") else "source_detail",
@@ -833,6 +837,7 @@ def parse_square_user_posts(result: FetchResult, source: dict[str, Any]) -> list
             published_at=published_at,
             language=row.get("lan") or row.get("detectedLang"),
             metadata={
+                "image_urls": extract_post_images(row),
                 "source_uid": source_uid,
                 "content_origin": "creator_post",
                 "content_type": row.get("contentType"),
@@ -1112,8 +1117,26 @@ def _store_item(conn: Any, source_row: Any, source: dict[str, Any], item: Parsed
             (entity_id, item.canonical_url, item.title, item.author, item.language, item.published_at, fetched_at, content_id),
         )
     normalized = compact_text(item.text)
-    checksum = hashlib.sha256(normalized.encode("utf-8")).hexdigest()
-    version = conn.execute("SELECT id FROM content_versions WHERE content_id=? AND checksum=?", (content_id, checksum)).fetchone()
+    urls = image_urls(item.metadata.get("image_urls"))
+    text_checksum = hashlib.sha256(normalized.encode("utf-8")).hexdigest()
+    # Preserve legacy text-only checksums, but never reuse a revision with different images.
+    candidates = conn.execute(
+        "SELECT id,checksum,metadata_json FROM content_versions WHERE content_id=? AND normalized_text=? ORDER BY version_no DESC",
+        (content_id, normalized),
+    ).fetchall()
+    version = None
+    for candidate in candidates:
+        previous_metadata = json.loads(candidate["metadata_json"])
+        # A legacy hash-bound revision may have derived sidecar images. A fresh explicit
+        # empty capture must supersede it instead of retaining that older image decision.
+        unknown_legacy_images = (
+            "image_urls" in item.metadata and "image_urls" not in previous_metadata
+            and (previous_metadata.get("archive_response_sha256") or previous_metadata.get("retained_capture_sha256"))
+        )
+        if image_urls(previous_metadata.get("image_urls")) == urls and not unknown_legacy_images:
+            version = candidate
+            break
+    checksum = text_checksum if not urls and not candidates else content_image_checksum(normalized, urls)
     new_version = 0
     if version is None:
         number = int(conn.execute("SELECT COALESCE(MAX(version_no),0)+1 FROM content_versions WHERE content_id=?", (content_id,)).fetchone()[0])
@@ -1126,6 +1149,12 @@ def _store_item(conn: Any, source_row: Any, source: dict[str, Any], item: Parsed
         new_version = 1
     else:
         version_id = int(version["id"])
+        latest = conn.execute(
+            "SELECT metadata_json FROM content_versions WHERE id=(SELECT latest_version_id FROM contents WHERE id=?)",
+            (content_id,),
+        ).fetchone()
+        if urls or (latest and image_urls(json.loads(latest["metadata_json"]).get("image_urls"))):
+            conn.execute("UPDATE contents SET latest_version_id=? WHERE id=?", (version_id, content_id))
 
     engagement = item.metadata.get("engagement") if isinstance(item.metadata, dict) else None
     if isinstance(engagement, dict) and any(engagement.get(k) is not None for k in ("views", "likes", "comments", "shares", "replies")):

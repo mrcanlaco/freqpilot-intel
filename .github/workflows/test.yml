@@ -26,8 +26,9 @@ jobs:
           node --check src/bti/static/workspace.js
           node --check src/bti/static/drafts.js
           node --check src/bti/static/composer.js
+          node --check src/bti/static/images.js
       - name: Browser workspace privacy, persistence and migration regressions
-        run: node --test tests/test_workspace.js tests/test_drafts.js
+        run: node --test tests/test_workspace.js tests/test_drafts.js tests/test_images.js
       - name: Unit, integration, semantics and privacy regression
         env:
           PYTHONPATH: src

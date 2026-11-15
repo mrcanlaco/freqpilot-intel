@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 from .db import connect, init_db, utc_now
+from .images import extract_post_images
 from .ingest import (
     AccessStopped,
     BodyTooLarge,
@@ -360,6 +361,7 @@ def _archive_item(
         "archive_original_url": original_url,
         "archive_observed_at": observed_at,
         "archive_response_sha256": response_sha256,
+        "image_urls": extract_post_images(row),
         "original_publication_time_evidence": {
             "field": "firstReleaseTime" if row.get("firstReleaseTime") is not None else "createTime",
             "raw_epoch_ms": row.get("firstReleaseTime") or row.get("createTime"),
@@ -481,9 +483,8 @@ def _store_result(
                 "SELECT id FROM contents WHERE canonical_url=?", (item.canonical_url,)
             ).fetchone()
             normalized = compact_text(item.text)
-            checksum = hashlib.sha256(normalized.encode("utf-8")).hexdigest()
             same_body = conn.execute(
-                "SELECT content_id FROM content_versions WHERE checksum=? LIMIT 1", (checksum,)
+                "SELECT content_id FROM content_versions WHERE normalized_text=? LIMIT 1", (normalized,)
             ).fetchone()
             if existing is not None or same_body is not None:
                 duplicates += 1

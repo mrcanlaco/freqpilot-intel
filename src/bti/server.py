@@ -22,6 +22,7 @@ STATIC_TYPES = {
     "workspace.js": "text/javascript; charset=utf-8",
     "drafts.js": "text/javascript; charset=utf-8",
     "composer.js": "text/javascript; charset=utf-8",
+    "images.js": "text/javascript; charset=utf-8",
 }
 SECURITY_HEADERS = {
     "Content-Security-Policy": "default-src 'self'; img-src 'self' https: data:; style-src 'self'; script-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'",
@@ -96,6 +97,8 @@ class Handler(BaseHTTPRequestHandler):
                 self._static("drafts.js", head=head)
             elif path == "/assets/composer.js":
                 self._static("composer.js", head=head)
+            elif path == "/assets/images.js":
+                self._static("images.js", head=head)
             elif path in self.app.campaign_assets:
                 body, content_type, csp = self.app.campaign_assets[path]
                 self._send(body, content_type, head=head, csp=csp)
@@ -128,6 +131,7 @@ class Handler(BaseHTTPRequestHandler):
                     limit=int(one("limit") or 12), offset=int(one("offset") or 0),
                     entity=one("entity"), post_ids=one("post_ids"), seen_after=one("seen_after"),
                     quality_only=one("quality_only") == "1",
+                    has_images=one("has_images") == "1",
                     basis=one("basis") or "all", cohort=one("cohort") or "all",
                 ), head=head)
             elif path.startswith("/api/articles/"):

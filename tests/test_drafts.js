@@ -5,8 +5,9 @@ const assert = require("node:assert/strict");
 const {webcrypto} = require("node:crypto");
 if (!globalThis.crypto) globalThis.crypto = webcrypto;
 require("../src/bti/static/workspace.js");
+require("../src/bti/static/images.js");
 require("../src/bti/static/drafts.js");
-const {KEY, createStore, newDraft, validateBackup, encodeBackup, active, renderText, checkDraft} = BTIDrafts;
+const {KEY, createStore, newDraft, validateBackup, encodeBackup, active, renderText, checkDraft, assertImageSources, makePostPackage} = BTIDrafts;
 const stamp = "2026-10-20T00:00:00.000Z";
 const source = () => BTIWorkspace.snapshot({
   post_id: "12345678", title: "Synthetic risk evidence", author: "Synthetic author",
@@ -17,7 +18,7 @@ const source = () => BTIWorkspace.snapshot({
   citation: {source_url: "https://web.archive.org/web/20261020000000/https://www.binance.com/en/square/post/12345678"}
 });
 const draft = () => newDraft({title: "Synthetic private title", body: "My editable interpretation.", notes: "PRIVATE-NOTES-DO-NOT-EXPORT", sources: [source()]});
-const backup = () => { const item = draft(); return {version: 1, active_id: item.id, drafts: [item]}; };
+const backup = () => { const item = draft(); return {version: 2, active_id: item.id, drafts: [item]}; };
 function storage(initial = null) {
   let value = initial, writes = 0;
   return {
@@ -31,7 +32,7 @@ test("save and reload preserve editable wording, private notes and exact source 
   const disk = storage();
   const store = createStore(disk);
   assert.equal(disk.writes(), 0);
-  assert.deepEqual(store.get(), {version: 1, active_id: null, drafts: []});
+  assert.deepEqual(store.get(), {version: 2, active_id: null, drafts: []});
   const item = draft();
   store.commit(state => { state.drafts.push(item); state.active_id = item.id; });
   const reloaded = createStore(disk);
@@ -71,7 +72,7 @@ test("stale tabs cannot overwrite another tab's saved work", () => {
 });
 
 test("corrupt, empty and unknown persisted schemas are never reset or written on load", () => {
-  for (const raw of ["", "{broken", "null", JSON.stringify({...backup(), version: 2}), JSON.stringify({...backup(), future_field: true})]) {
+  for (const raw of ["", "{broken", "null", JSON.stringify({...backup(), version: 99}), JSON.stringify({...backup(), future_field: true})]) {
     const disk = storage(raw);
     assert.throws(() => createStore(disk));
     assert.equal(disk.raw(), raw);
@@ -137,7 +138,7 @@ test("strict draft schema rejects wrong enums, IDs, times, lengths and unknown f
 
 test("aggregate UTF-8 storage limit rejects commits and imports atomically", () => {
   const disk = storage(JSON.stringify(backup())), store = createStore(disk), before = disk.raw();
-  const oversized = {version: 1, active_id: null, drafts: Array.from({length: 80}, () => newDraft({body: "é".repeat(15000)}))};
+  const oversized = {version: 2, active_id: null, drafts: Array.from({length: 80}, () => newDraft({body: "é".repeat(15000)}))};
   assert.throws(() => validateBackup(oversized), /2 MiB/);
   assert.throws(() => encodeBackup(oversized), /2 MiB/);
   assert.throws(() => store.importBackup(oversized), /2 MiB/);
@@ -179,4 +180,54 @@ test("export readiness counts the full rendered post including title, citations 
   assert.equal(checkDraft(empty).ok, false);
   assert.ok(checkDraft(empty).issues.some(issue => /nội dung/.test(issue)));
   assert.ok(checkDraft(empty).issues.some(issue => /nguồn/.test(issue)));
+});
+
+test("legacy text drafts migrate on read without overwriting saved bytes or private work", () => {
+  const original = backup(); original.version = 1;
+  delete original.drafts[0].images;
+  const bytes = JSON.stringify(original), disk = storage(bytes), store = createStore(disk);
+  assert.equal(disk.raw(), bytes); assert.equal(disk.writes(), 0);
+  assert.deepEqual(active(store.get()), {...original.drafts[0], images: []});
+  store.commit(state => { state.drafts[0].body = "Edited after migration"; });
+  const saved = JSON.parse(disk.raw());
+  assert.equal(saved.version, 2);
+  assert.equal(saved.drafts[0].notes, original.drafts[0].notes);
+  assert.deepEqual(saved.drafts[0].sources, original.drafts[0].sources);
+  assert.equal(saved.drafts[0].body, "Edited after migration");
+});
+
+const imageURL = "https://public.bnbstatic.com/image/pgc/synthetic/chart.png";
+test("selected image links stay bound to cited sources and roundtrip through private backup", () => {
+  const item = draft(); item.images = [{post_id: item.sources[0].post_id, url: imageURL}];
+  const state = {version: 2, active_id: item.id, drafts: [item]};
+  const disk = storage(), store = createStore(disk);
+  store.importBackup(JSON.parse(encodeBackup(state)));
+  assert.deepEqual(active(createStore(disk).get()).images, item.images);
+  assert.equal(active(store.get()).notes, item.notes);
+  for (const bad of [
+    [{post_id: "uncited", url: imageURL}],
+    [{post_id: item.sources[0].post_id, url: "https://evil.example/chart.png"}],
+    [...item.images, ...item.images],
+    [{...item.images[0], private_note: "Unsupported"}],
+    Array.from({length: 5}, (_, i) => ({post_id: item.sources[0].post_id, url: imageURL.replace("chart", `chart-${i}`)}))
+  ]) assert.throws(() => encodeBackup({...state, drafts: [{...item, images: bad}]}));
+});
+
+test("image exports require fresh URL membership and exact source revision, never private notes", () => {
+  const item = draft(), ref = item.sources[0];
+  item.images = [{post_id: ref.post_id, url: imageURL}];
+  const article = {post_id: ref.post_id, version: ref.version, checksum: ref.checksum, images: [imageURL]};
+  assertImageSources(item, new Map([[ref.post_id, article]]));
+  const output = makePostPackage(item);
+  assert.equal(output.schema, "bti-square-post-v1");
+  assert.equal(output.text, renderText(item));
+  assert.deepEqual(output.images, [{post_id: ref.post_id, url: imageURL, author: ref.author,
+    content_url: ref.url, source_url: ref.source_url, version: ref.version, source_checksum: ref.checksum,
+    fetched_at: ref.fetched_at, observed_at: ref.observed_at}]);
+  assert.ok(!JSON.stringify(output).includes(item.notes));
+  assert.ok(!renderText(item).includes(imageURL), "Text-only copy cannot pretend to embed an image");
+  for (const fresh of [null, {...article, images: []}, {...article, images: ["https://public.bnbstatic.com/image/pgc/synthetic/replaced.png"]},
+    {...article, version: 4}, {...article, checksum: "b".repeat(64)}, {...article, post_id: "another-post"}]) {
+    assert.throws(() => assertImageSources(item, new Map(fresh ? [[ref.post_id, fresh]] : [])));
+  }
 });

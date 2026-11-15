@@ -697,6 +697,12 @@ function renderActiveArticleFilterBar() {
   bar.append(clear);
 }
 
+function articleImages(item, compact = false) {
+  const gallery = el("div");
+  BTIImages.render(gallery, BTIImages.urls(item), {alt: item.title, compact});
+  return gallery;
+}
+
 function renderArticles(data, resetLimit = true) {
   if (feedStates.get("article") !== "ready") return;
   if (data) currentArticleData = data;
@@ -804,7 +810,7 @@ function renderArticles(data, resetLimit = true) {
     extLink.rel = "noopener";
     actions.append(createBtn, inspectBtn, saveBtn, extLink);
     provenance.append(metrics);
-    card.append(meta, heading, preview, badges, actions, provenance);
+    card.append(meta, heading, articleImages(item, true), preview, badges, actions, provenance);
     root.append(card);
   }
   renderPaginationBar("#article-pagination", currentArticleData.pagination, offset => refreshArticlesFromControls(false, offset));
@@ -901,7 +907,7 @@ async function openArticleDrawer(postKey, updateURL = true) {
     );
     const original = el("a", "content-link", "Đọc nguồn gốc ↗");
     original.href = item.citation?.source_url || item.url; original.target = "_blank"; original.rel = "noopener";
-    excerptSec.append(original);
+    excerptSec.append(articleImages(item), original);
     body.append(excerptSec);
 
     const claimSec = el("section", "drawer-section");
@@ -1376,12 +1382,13 @@ function renderBriefStudio() {
 async function refreshTodaySources() {
   const root = $("#today-suggestions");
   try {
-    const data = await getJSON("/api/articles?sort=latest&limit=3");
+    const data = await getJSON("/api/articles?sort=latest&has_images=1&limit=3");
     root.replaceChildren();
-    if (!data.items.length) root.append(el("p", "empty", "Kho chưa có nguồn công khai. Bạn vẫn có thể tạo nháp trống và thêm nguồn khi có dữ liệu."));
+    if (!data.items.length) root.append(el("p", "empty", "Chưa ghi nhận nguồn có link ảnh hợp lệ. Bạn vẫn có thể tạo bài chữ hoặc tìm trong Kho nguồn; không có ảnh thay thế tự động."));
     for (const item of data.items) {
       const card = el("article", "panel article-card");
       card.append(el("h3", "", item.title), el("p", "sample-note", `${item.author} · Xuất bản gốc: ${when(item.published_at)}`));
+      card.append(articleImages(item, true));
       const create = el("button", "hero-btn primary", "Tạo bài từ nguồn này"); create.type = "button";
       create.addEventListener("click", () => BTIComposer.fromArticle(item.post_id));
       const read = el("button", "inspect-btn", "Đọc nguồn"); read.type = "button";
@@ -1473,6 +1480,7 @@ async function refreshNew(offset = 0) {
     for (const item of data.items) {
       const card = el("article", "panel article-card");
       card.append(el("h3", "", item.title), el("p", "", `${item.author} · Xuất bản: ${when(item.published_at)} · Mới biết: ${when(item.first_seen_at)}`), el("p", "", item.excerpt));
+      card.append(articleImages(item, true));
       const actions = el("div", "article-actions"), open = el("button", "inspect-btn", "Mở bài & chọn bằng chứng");
       open.type = "button"; open.addEventListener("click", () => openArticleDrawer(item.post_id));
       actions.append(open); card.append(actions); root.append(card);

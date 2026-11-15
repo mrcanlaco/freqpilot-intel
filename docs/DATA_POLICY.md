@@ -17,9 +17,13 @@ influence award establishes audited trading skill.
 
 Personal research and editable drafts live in the user's browser, not on the
 server. Private backups may contain notes and full source references and should
-not enter Git or public posts. Draft `.txt` and clipboard exports omit private
-notes and recheck public permission and source revisions. Authored commentary is
-not independently verified. There is no scheduling or automatic publishing.
+not enter Git or public posts. Draft post exports omit private notes and recheck
+public permission, source revisions and selected image URL membership. Image
+packages contain URLs, not image files. Viewing uses a direct no-referrer browser
+request to Binance's CDN (which receives the viewer's IP). Remote images can
+change or disappear; displaying a public image does not grant republication rights.
+Authored commentary is not independently verified. There is no scheduling or
+automatic publishing.
 A hostname change creates a separate browser origin; use explicit export/import
 while the previous origin is reachable. Clearing site data deletes local drafts.
 

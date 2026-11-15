@@ -5,11 +5,12 @@
   const KEY = "bti_square_drafts_v1";
   const MAX_BYTES = 2 * 1024 * 1024;
   const STATE_FIELDS = ["version", "active_id", "drafts"];
-  const DRAFT_FIELDS = ["id", "title", "body", "content_type", "notes", "sources", "created_at", "updated_at"];
+  const LEGACY_DRAFT_FIELDS = ["id", "title", "body", "content_type", "notes", "sources", "created_at", "updated_at"];
+  const DRAFT_FIELDS = [...LEGACY_DRAFT_FIELDS, "images"];
   const SOURCE_FIELDS = ["post_id", "evidence_id", "title", "author", "url", "source_url", "version", "checksum", "published_at", "fetched_at", "observed_at", "quote", "verification", "limitations"];
   const DISCLAIMER = "Lưu ý: Tổng hợp nghiên cứu cá nhân từ nguồn công khai, không phải khuyến nghị đầu tư hay tín hiệu giao dịch. Tương tác và giải thưởng nội dung không chứng minh lợi nhuận thực tế. Không tự xuất bản.";
   const copy = value => JSON.parse(JSON.stringify(value));
-  const empty = () => ({version: 1, active_id: null, drafts: []});
+  const empty = () => ({version: 2, active_id: null, drafts: []});
   function fields(value, names) {
     if (!value || typeof value !== "object" || Array.isArray(value)
         || Object.keys(value).length !== names.length
@@ -28,19 +29,29 @@
         || !Number.isFinite(Date.parse(value)) || new Date(value).toISOString() !== value) throw new Error("Thời điểm bản nháp không hợp lệ.");
     return value;
   }
-  function validateDraft(raw) {
-    fields(raw, DRAFT_FIELDS);
+  function validateDraft(raw, legacy = false) {
+    fields(raw, legacy ? LEGACY_DRAFT_FIELDS : DRAFT_FIELDS);
     if (![1, 2].includes(raw.content_type) || !Array.isArray(raw.sources) || raw.sources.length > 20) throw new Error("Loại bài hoặc danh sách nguồn không hợp lệ (tối đa 20 nguồn).");
     const created = timestamp(raw.created_at), updated = timestamp(raw.updated_at);
     if (updated < created) throw new Error("Ngày cập nhật không được trước ngày tạo bản nháp.");
+    const sources = Array.from(raw.sources, source => {
+      fields(source, SOURCE_FIELDS);
+      try { return globalThis.BTIWorkspace.validateSnapshot(source); }
+      catch (err) { throw new Error(`Nguồn bản nháp không hợp lệ: ${err.message}`); }
+    });
+    const images = legacy ? [] : raw.images;
+    if (!Array.isArray(images) || images.length > 4) throw new Error("Một bản nháp hỗ trợ tối đa 4 ảnh nguồn.");
+    const seen = new Set();
+    const selected = Array.from(images, image => {
+      fields(image, ["post_id", "url"]);
+      if (!sources.some(source => source.post_id === image.post_id)
+          || !globalThis.BTIImages.safeURL(image.url) || seen.has(image.url)) throw new Error("Ảnh phải là URL Binance hợp lệ, không trùng và gắn với nguồn của bài.");
+      seen.add(image.url);
+      return {post_id: image.post_id, url: image.url};
+    });
     return {
       id: identifier(raw.id), title: text(raw.title, 120), body: text(raw.body, 15000),
-      content_type: raw.content_type, notes: text(raw.notes, 4000),
-      sources: Array.from(raw.sources, source => {
-        fields(source, SOURCE_FIELDS);
-        try { return globalThis.BTIWorkspace.validateSnapshot(source); }
-        catch (err) { throw new Error(`Nguồn bản nháp không hợp lệ: ${err.message}`); }
-      }),
+      content_type: raw.content_type, notes: text(raw.notes, 4000), sources, images: selected,
       created_at: created, updated_at: updated
     };
   }
@@ -51,23 +62,23 @@
   }
   function validateBackup(raw) {
     fields(raw, STATE_FIELDS);
-    if (raw.version !== 1 || !Array.isArray(raw.drafts) || raw.drafts.length > 100) throw new Error("Bản sao không đúng định dạng bản nháp v1 (tối đa 100 bài).");
+    if (![1, 2].includes(raw.version) || !Array.isArray(raw.drafts) || raw.drafts.length > 100) throw new Error("Bản sao không đúng định dạng bản nháp v1/v2 (tối đa 100 bài).");
     const ids = new Set();
     const drafts = Array.from(raw.drafts, item => {
-      const draft = validateDraft(item);
+      const draft = validateDraft(item, raw.version === 1);
       if (ids.has(draft.id)) throw new Error("Mã bản nháp bị trùng.");
       ids.add(draft.id);
       return draft;
     });
     if (raw.active_id !== null && !ids.has(raw.active_id)) throw new Error("Bản nháp đang chọn không tồn tại.");
-    const state = {version: 1, active_id: raw.active_id, drafts};
+    const state = {version: 2, active_id: raw.active_id, drafts};
     encoded(state);
     return state;
   }
   function encodeBackup(state) { return encoded(validateBackup(state)); }
-  function newDraft({title = "", body = "", content_type = 1, notes = "", sources = []} = {}) {
+  function newDraft({title = "", body = "", content_type = 1, notes = "", sources = [], images = []} = {}) {
     const stamp = new Date().toISOString();
-    return validateDraft({id: crypto.randomUUID(), title, body, content_type, notes, sources, created_at: stamp, updated_at: stamp});
+    return validateDraft({id: crypto.randomUUID(), title, body, content_type, notes, sources, images, created_at: stamp, updated_at: stamp});
   }
   function createStore(storage) {
     let saved;
@@ -137,5 +148,29 @@
     if (characters > limit) issues.push(`Bài xuất gồm nguồn và lưu ý có ${characters} ký tự, vượt giới hạn ${limit}.`);
     return {ok: issues.length === 0, issues, characters, limit};
   }
-  globalThis.BTIDrafts = {KEY, createStore, newDraft, validateBackup, encodeBackup, active, renderText, checkDraft};
+  function assertImageSources(raw, articles) {
+    const draft = validateDraft(raw);
+    for (const image of draft.images) {
+      const article = articles.get(image.post_id);
+      const source = draft.sources.find(s => s.post_id === image.post_id);
+      if (!article || article.post_id !== image.post_id || article.version !== source.version
+          || (source.checksum && article.checksum !== source.checksum)
+          || !globalThis.BTIImages.urls(article).includes(image.url)) {
+        throw new Error("Ảnh không còn được ghi nhận trong phiên bản nguồn công khai. Cập nhật nguồn hoặc bỏ ảnh rồi chọn lại.");
+      }
+    }
+  }
+  function makePostPackage(raw) {
+    const draft = validateDraft(raw);
+    return {
+      schema: "bti-square-post-v1", content_type: draft.content_type, text: renderText(draft),
+      images: draft.images.map(image => {
+        const source = draft.sources.find(s => s.post_id === image.post_id);
+        return {...image, author: source.author, content_url: source.url, source_url: source.source_url,
+          version: source.version, source_checksum: source.checksum,
+          fetched_at: source.fetched_at, observed_at: source.observed_at};
+      })
+    };
+  }
+  globalThis.BTIDrafts = {KEY, createStore, newDraft, validateBackup, encodeBackup, active, renderText, checkDraft, assertImageSources, makePostPackage};
 })();

@@ -12,6 +12,7 @@ from .content_volume import run_content_volume_batch
 from .db import init_db
 from .domain import build_drafts
 from .ingest import ingest, ingest_public_capture, seed_sources
+from .images import enrich_images
 from .public import health, public_export, worker_public_status
 from .scanner import replicate_scanner_instance, scanner_doctor, scanner_public_status
 from .server import serve
@@ -41,6 +42,9 @@ def parser() -> argparse.ArgumentParser:
     capture_parser = sub.add_parser("ingest-capture", help="Import an explicit anonymous public browser capture")
     capture_parser.add_argument("--source", required=True, help="Configured source slug")
     capture_parser.add_argument("--input", required=True, help="Project-local capture JSON")
+    images_parser = sub.add_parser("enrich-images", help="Derive original image URLs from verified offline captures (read-only dry-run default)")
+    images_parser.add_argument("--captures", required=True, help="Existing directory containing retained .body responses")
+    images_parser.add_argument("--write-index", action="store_true", help="Atomically write a derived URL sidecar; never modify the canonical database")
     volume_parser = sub.add_parser("content-volume", help="Run bounded retained/archive article-body extraction")
     volume_parser.add_argument("--content-manifest", default=str(DEFAULT_CONTENT_MANIFEST))
     volume_parser.add_argument("--artifact-dir", help="Ignored runtime output directory")
@@ -114,6 +118,8 @@ def main(argv: list[str] | None = None) -> int:
             _json_print(ingest_public_capture(
                 db_path, manifest_path, source_slug=args.source, capture_path=args.input,
             ))
+    elif args.command == "enrich-images":
+        _json_print(enrich_images(db_path, args.captures, write_index=args.write_index))
     elif args.command == "content-volume":
         artifact_dir = Path(args.artifact_dir) if args.artifact_dir else db_path.resolve().parent / "content-volume"
         with ProcessLock(default_lock_path(db_path)):

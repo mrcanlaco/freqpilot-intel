@@ -12,6 +12,7 @@ from typing import Any
 from .crawler_policy import public_crawler_status
 from .content_volume import QUALITY_GATE_VERSION, content_volume_status
 from .db import PILLARS, SCHEMA_VERSION, connect, json_load, public_excerpt, utc_now
+from .images import load_image_index, projected_image_urls
 from .scanner import scanner_public_status
 from .research import discovery_research, missing_public_research, permitted_source_claims
 
@@ -939,6 +940,7 @@ def articles(
     quality_only: bool = False,
     basis: str = "all",
     cohort: str = "all",
+    has_images: bool = False,
 ) -> dict[str, Any]:
     if sort not in {"likes", "comments", "shares", "views", "total_interactions", "latest", "discovered", "research"}:
         raise ValueError("Unsupported article sort")
@@ -990,7 +992,7 @@ def articles(
                )
                SELECT c.id,c.external_id,c.title,c.canonical_url,c.author,c.language,c.published_at,c.first_seen_at,
                       cv.id AS version_id,c.entity_id,cv.version_no,cv.fetched_at,cv.excerpt,e.slug AS entity_slug,e.display_name,
-                      s.url AS source_url,s.source_type,cv.metadata_json,
+                      s.url AS source_url,s.source_type,cv.metadata_json,cv.checksum,e.source_uid,
                       ev.observed_at AS engagement_observed_at,ev.value_json
                FROM contents c
                JOIN entities e ON e.id=c.entity_id
@@ -1026,6 +1028,7 @@ def articles(
             )}
     items: list[dict[str, Any]] = []
     query = (q or "").strip().casefold()
+    image_index = load_image_index(db_path)
     author_query = (author or "").strip().casefold()
     for row in rows:
         if cohort == "trader_awardees" and row["entity_id"] not in trader_ids:
@@ -1090,6 +1093,8 @@ def articles(
         items.append({
             "id": row["id"],
             "post_id": post_id,
+            "images": projected_image_urls(metadata, index=image_index, version_id=row["version_id"],
+                                           post_id=row["external_id"], checksum=row["checksum"], source_uid=row["source_uid"]),
             "title": row["title"], "url": row["canonical_url"], "author": author_display,
             "entity_slug": row["entity_slug"], "published_at": row["published_at"],
             "first_seen_at": row["first_seen_at"], "fetched_at": row["fetched_at"],
@@ -1130,6 +1135,8 @@ def articles(
     all_deduped = list(deduped.values())
 
     filtered_items = all_deduped
+    if has_images:
+        filtered_items = [item for item in filtered_items if item["images"]]
     if lang_mode == "vi":
         filtered_items = [item for item in filtered_items if item["vi_intel"]["is_vietnamese"]]
     elif lang_mode == "en":
@@ -1274,7 +1281,7 @@ def article_detail(db_path: str | Path, post_key: str) -> dict[str, Any] | None:
                       cv.id AS version_id,cv.version_no,cv.fetched_at,cv.checksum,cv.excerpt,
                       LENGTH(cv.normalized_text) AS body_chars,cv.normalized_text,cv.metadata_json,
                       e.id AS entity_id,e.slug AS entity_slug,e.display_name,e.category AS entity_category,
-                      e.username,e.identity_status,
+                      e.username,e.identity_status,e.source_uid,
                       s.id AS source_id,s.name AS source_name,s.url AS source_url,s.source_type
                FROM contents c
                JOIN entities e ON e.id=c.entity_id
@@ -1296,6 +1303,7 @@ def article_detail(db_path: str | Path, post_key: str) -> dict[str, Any] | None:
         entity_id = int(row["entity_id"])
         source_id = int(row["source_id"])
         metadata = json_load(row["metadata_json"], {})
+        image_index = load_image_index(db_path)
         provenance_type = metadata.get("provenance_type", "direct_public_response")
         provenance_url = metadata.get("archive_snapshot_url") or row["source_url"]
         author_display = row["author"] or row["display_name"]
@@ -1377,6 +1385,8 @@ def article_detail(db_path: str | Path, post_key: str) -> dict[str, Any] | None:
         return {
             "id": content_id,
             "post_id": str(row["external_id"]),
+            "images": projected_image_urls(metadata, index=image_index, version_id=row["version_id"],
+                                           post_id=row["external_id"], checksum=row["checksum"], source_uid=row["source_uid"]),
             "title": row["title"],
             "url": row["canonical_url"],
             "author": author_display,

@@ -40,6 +40,28 @@ Remote setup is a separate explicit operator action. Do not run the installer ju
 to start the local dashboard. Do not copy an existing account credential or give
 the executor access to the canonical SQLite database.
 
+## Original image URL index
+
+New permitted ingestion captures post image URLs alongside text. For older retained
+captures, build the derived index offline; this does not fetch source content or
+download images:
+
+```sh
+PYTHONPATH=src python -m bti --db runtime/bti.sqlite3 enrich-images --captures runtime/content-volume/raw
+PYTHONPATH=src python -m bti --db runtime/bti.sqlite3 enrich-images --captures runtime/content-volume/raw --write-index
+```
+
+The first command is a dry run. The second atomically writes the ignored
+`runtime/bti.images.json`; it never writes the canonical DB or takes the collector's
+writer lock. Keep the collector running. Only exact retained response SHA-256,
+post ID, author UID and revision matches qualify. Missing or mismatched captures
+remain without images; do not fetch replacements or clear a source hold.
+
+The HTTP API only exposes these URLs through permitted article projections,
+rechecking source/entity/content visibility and revision binding. Explicit image
+metadata (including an empty list) takes precedence over the derived index. Never
+publish the index or raw captures as repository source or generic static files.
+
 ## Releases
 
 Run the offline tests and review the staged-file allowlist. Back up a live SQLite
@@ -50,7 +72,7 @@ Verify both localhost and public HTTPS, asset hashes, report availability, priva
 paths returning 404 and mutations returning 405.
 
 For an AGPL network deployment, keep a prominent source offer pointing at the exact
-version being served. The v0.3.0 source link targets `v0.3.0`; publish the matching
+version being served. The v0.4.0 source link targets `v0.4.0`; publish the matching
 tag before reloading a new release. Do not expose credentials, raw captures
 or personal notes as part of the source offer. Keep an old origin reachable until
 users can explicitly export/import private browser research after a domain change.
