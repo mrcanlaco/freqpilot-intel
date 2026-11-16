@@ -13,6 +13,9 @@ permission-checked public projection → research workspace/export.
   never writes the canonical database and does not replace live permission checks.
 - `public.py` / `research.py`: live authorization, conservative source excerpts,
   filters, pagination and auditable research fields.
+  Article projections include `excerpt_truncated` without exposing full bodies.
+  Shared browser card rendering keeps original-post navigation separate from the
+  local excerpt/audit reader; engagement remains a timestamped read-only snapshot.
 - `brief.py`: permission-checked, bounded intelligence brief export (`bti-intelligence-brief-v1`) for downstream tools; no automatic publishing.
 - `server.py` / `static/`: loopback read-only HTTP and browser-local personal plans.
 - `static/drafts.js`: bounded browser-local draft storage, atomic saves, merge-only

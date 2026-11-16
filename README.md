@@ -13,7 +13,18 @@ official recognition. A content award is not audited trading performance; missin
 evidence stays unknown. Deterministic keyword labels are not AI translations or
 validated investment signals.
 
-## v0.4.0: Original Binance images
+## v0.5.0: Compact Square-style posts
+
+- Home, source-library and followed-source cards show the author, original
+  publication time, a compact excerpt, original images and visible engagement.
+- **Hiện thêm trên Binance** opens the full original post in a new tab.
+  **Bản lưu & bằng chứng** opens the application's permitted excerpt and research
+  audit. Full normalized evidence bodies remain private, not public HTTP fields.
+- Views, likes, comments and shares are read-only observed snapshots, not live
+  counters or interaction buttons. Unknown values display **Chưa rõ**; a recorded
+  zero stays zero. The metric observation time is separate from publication time.
+
+### Original Binance images and drafting
 
 - Source cards and the reader display captured post images directly from the
   original Binance CDN. The server stores URLs only: no image hosting, image

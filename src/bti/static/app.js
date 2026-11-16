@@ -703,6 +703,114 @@ function articleImages(item, compact = false) {
   return gallery;
 }
 
+function originalPostURL(item) {
+  try {
+    const url = new URL(item.url);
+    if (url.protocol !== "https:" || url.username || url.password || url.port
+        || !["www.binance.com", "binance.com"].includes(url.hostname)
+        || !/^\/(?:[a-z]{2}(?:-[A-Za-z]{2})?\/)?(?:square|feed)\/post\/[A-Za-z0-9_-]+\/?$/.test(url.pathname)) return null;
+    return url.href;
+  } catch (_err) { return null; }
+}
+
+function fullPostLink(item, text) {
+  const url = originalPostURL(item); if (!url) return null;
+  const link = el("a", "post-more", text);
+  link.href = url; link.target = "_blank"; link.rel = "noopener noreferrer";
+  link.title = "Mở toàn bộ bài gốc trên Binance trong tab mới; ứng dụng chỉ công khai trích đoạn.";
+  return link;
+}
+
+function articlePreview(item) {
+  const root = el("div", "post-preview");
+  const excerpt = String(item.excerpt || "").trim(), points = Array.from(excerpt);
+  const clipped = points.length > 180;
+  root.append(el("p", "post-preview-text", clipped ? `${points.slice(0, 180).join("").trimEnd()}…` : excerpt || "Chưa có trích đoạn được phép hiển thị."));
+  if (clipped || item.excerpt_truncated) {
+    const more = fullPostLink(item, "Hiện thêm trên Binance ↗");
+    root.append(more || el("span", "sample-note", "Chưa có liên kết bài gốc hợp lệ."));
+  }
+  return root;
+}
+
+function articleEngagement(item) {
+  const root = el("div", "post-engagement-wrap"), list = el("dl", "post-engagement");
+  list.setAttribute("aria-label", "Tương tác của bài nguồn, chỉ đọc");
+  for (const [key, label] of [["views", "Lượt xem"], ["likes", "Thích"], ["comments", "Bình luận"], ["shares", "Chia sẻ"]]) {
+    const value = item.engagement?.[key], known = typeof value === "number" && Number.isFinite(value) && value >= 0;
+    const cell = el("div", known ? "" : "metric-unknown"), count = el("dd", "", known ? fmt(value) : "Chưa rõ");
+    if (known) count.title = new Intl.NumberFormat("vi-VN").format(value);
+    cell.append(el("dt", "", label), count); list.append(cell);
+  }
+  root.append(list, el("p", "post-observed", item.engagement_observed_at
+    ? `Quan sát: ${when(item.engagement_observed_at)} · Số liệu bản lưu, không phải trực tiếp.`
+    : "Chưa ghi nhận thời điểm quan sát tương tác; chỉ số thiếu không được coi là 0."));
+  return root;
+}
+
+function syncArticleBookmarks() {
+  for (const button of document.querySelectorAll("[data-bookmark-post]")) {
+    const saved = savedBookmarks.has(button.dataset.bookmarkPost);
+    button.classList.toggle("saved", saved); button.textContent = saved ? "Đã lưu" : "Lưu bài";
+    button.setAttribute("aria-pressed", String(saved));
+  }
+}
+
+function articleCard(item, {audit = false, discovered = false} = {}) {
+  const vi = item.vi_intel || {}, postKey = String(item.post_id || item.url.split("/").pop());
+  const card = el("article", `panel article-card social-post ${vi.is_vietnamese ? "vi-native-card" : ""}`);
+  const meta = el("div", "post-header"), identity = el("div", "post-identity");
+  const author = el("button", "author-chip-btn", item.author || "Tác giả chưa rõ"); author.type = "button";
+  author.addEventListener("click", () => openDossierDrawer(item.entity_slug));
+  identity.append(author, el("p", "post-published", `Binance Square · ${item.published_at ? when(item.published_at) : "Ngày gốc chưa rõ"}`));
+  meta.append(el("span", "post-author-mark", Array.from(item.author || "?").slice(0,2).join("").toUpperCase()), identity);
+  card.append(meta);
+  const title = String(item.title || "");
+  const excerptLead = String(item.excerpt || "").replace(/…$/, "").trimEnd(), titleLead = title.replace(/…$/, "").trimEnd();
+  const repeatsExcerpt = excerptLead && (excerptLead.startsWith(titleLead) || titleLead.startsWith(excerptLead));
+  if (title && !repeatsExcerpt) {
+    const heading = el("h3"), link = el("a", "", title);
+    const permalink = new URL(location.href); permalink.searchParams.delete("dossier"); permalink.searchParams.set("article", postKey);
+    link.href = permalink.href;
+    link.addEventListener("click", event => {
+      if (!event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey) { event.preventDefault(); openArticleDrawer(postKey); }
+    });
+    heading.append(link); card.append(heading);
+  }
+  card.append(articlePreview(item), articleImages(item, true), articleEngagement(item));
+  const actions = el("div", "article-actions");
+  const create = el("button", "hero-btn primary", "Tạo bài từ nguồn này"); create.type = "button";
+  create.addEventListener("click", () => BTIComposer.fromArticle(postKey));
+  const read = el("button", "inspect-btn", "Bản lưu & bằng chứng"); read.type = "button";
+  read.addEventListener("click", () => openArticleDrawer(postKey));
+  const save = el("button", "bookmark-btn", savedBookmarks.has(postKey) ? "Đã lưu" : "Lưu bài"); save.type = "button";
+  save.dataset.bookmarkPost = postKey; save.classList.toggle("saved", savedBookmarks.has(postKey));
+  save.setAttribute("aria-pressed", String(savedBookmarks.has(postKey)));
+  save.addEventListener("click", () => {
+    const before = new Set(savedBookmarks);
+    if (savedBookmarks.has(postKey)) savedBookmarks.delete(postKey); else savedBookmarks.add(postKey);
+    if (!persistBookmarks(before)) return;
+    syncArticleBookmarks();
+    if (savedFilterActive && !$("#bai-viet").closest("[data-page]")?.hidden) refreshArticlesFromControls(false);
+  });
+  actions.append(create, read, save);
+  if (!item.excerpt_truncated && Array.from(String(item.excerpt || "")).length <= 180) {
+    const original = fullPostLink(item, "Bài gốc ↗"); if (original) actions.append(original);
+  }
+  card.append(actions);
+  if (discovered) card.append(el("p", "sample-note", `Hệ thống biết đến bài lần đầu: ${when(item.first_seen_at)}; không phải ngày xuất bản.`));
+  if (audit) {
+    const provenance = el("details", "article-provenance");
+    provenance.append(el("summary", "", "Nhãn & nguồn đã quan sát"));
+    const digest = el("div", "vi-digest-box", vi.vi_summary || item.excerpt);
+    if (vi.vi_usage_note) digest.append(el("small", "", vi.vi_usage_note));
+    provenance.append(digest, el("p", "", `Nhãn từ khóa, không phải bản dịch hoặc thẩm định. Tài sản: ${(vi.assets || []).join(", ") || "Chưa có"} · Chủ đề: ${(vi.topic_labels_vi || []).join(", ") || "Chưa có"}.`),
+      el("p", "", `Bản lưu v${item.version} · Thu thập: ${when(item.fetched_at)}`));
+    card.append(provenance);
+  }
+  return card;
+}
+
 function renderArticles(data, resetLimit = true) {
   if (feedStates.get("article") !== "ready") return;
   if (data) currentArticleData = data;
@@ -738,81 +846,7 @@ function renderArticles(data, resetLimit = true) {
     renderPaginationBar("#article-pagination", currentArticleData.pagination, offset => refreshArticlesFromControls(false, offset));
     return;
   }
-  const visibleItems = items;
-  for (const item of visibleItems) {
-    const vi = item.vi_intel || {};
-    const postKey = String(item.post_id || item.url.split("/").pop());
-    const card = el("article", `panel article-card ${vi.is_vietnamese ? "vi-native-card" : ""}`);
-    const meta = el("div", "article-meta");
-    const authorBtn = el("button", "author-chip-btn", `👤 ${item.author}`);
-    authorBtn.type = "button";
-    authorBtn.title = "Mở hồ sơ kiểm toán 3 trụ cột của tác giả này";
-    authorBtn.addEventListener("click", () => openDossierDrawer(item.entity_slug));
-    meta.append(
-      el("span", vi.is_vietnamese ? "badge-vi" : "badge-lang", `Binance Square · ${vi.is_vietnamese ? "Tiếng Việt gốc" : (vi.language_label_vi || "Đa ngôn ngữ").split(" (")[0]}`),
-      authorBtn,
-      el("span", "", item.published_at ? when(item.published_at) : "Ngày gốc: chưa biết"),
-      el("span", "", `v${item.version}`)
-    );
-    const badges = el("div", "article-badges");
-    for (const ticker of (vi.assets || []).slice(0, 3)) badges.append(el("span", "badge-asset", `$${ticker}`));
-    for (const topicLabel of (vi.topic_labels_vi || []).slice(0, 2)) badges.append(el("span", "badge-topic", topicLabel));
-    if (item.research?.quote) badges.append(el("span", "badge-basis", item.research.trigger || item.research.invalidation ? "Có mốc kích hoạt / vô hiệu" : "Có câu nguồn · chưa trích điều kiện"));
-    else badges.append(el("span", "badge-topic", "Bối cảnh · chưa có câu nguồn tách riêng"));
-    const heading = el("h3");
-    const link = el("a", "", item.title);
-    const permalink = new URL(location.href); permalink.searchParams.delete("dossier"); permalink.searchParams.set("article", postKey);
-    link.href = permalink.href;
-    link.addEventListener("click", (ev) => {
-      if (!ev.ctrlKey && !ev.metaKey && !ev.shiftKey) {
-        ev.preventDefault();
-        openArticleDrawer(postKey);
-      }
-    });
-    heading.append(link);
-    const viBox = el("div", "vi-digest-box", vi.vi_summary || item.excerpt);
-    if (vi.vi_usage_note) viBox.append(el("small", "", `Khuyến nghị sử dụng: ${vi.vi_usage_note}`));
-    const excerptP = el("p", "", `Trích đoạn gốc: "${item.excerpt}"`);
-    const quote = String(item.research?.quote || item.excerpt || "");
-    const preview = el("blockquote", "article-quote", `“${quote.slice(0, 280)}${quote.length > 280 ? "…" : ""}”`);
-    preview.append(el("small", "quote-label", item.research?.quote ? "Câu nguồn trích được · chưa thẩm định độ đúng" : "Trích đoạn lưu trong kho"));
-    const provenance = el("details", "article-provenance");
-    provenance.append(el("summary", "", "Nguồn, nhãn từ khóa & số liệu"));
-    provenance.append(viBox, excerptP, el("p", "", `Nhãn từ khóa, không phải tóm tắt hay bản dịch. Tài sản: ${(vi.assets || []).join(", ") || "Chưa có"} · Chủ đề: ${(vi.topic_labels_vi || []).join(", ") || "Chưa có"}.`));
-    const metrics = el("div", "engagement-row");
-    metrics.append(
-      el("span", "", `Likes ${fmt(item.engagement.likes)}`),
-      el("span", "", `Comments ${fmt(item.engagement.comments)}`),
-      el("span", "", `Shares ${fmt(item.engagement.shares)}`),
-      el("span", "", `Views ${fmt(item.engagement.views)}`),
-      el("span", "", `Tổng 3 metric ${fmt(item.total_interactions)}`),
-      el("span", "", `snapshot ${when(item.engagement_observed_at)}`)
-    );
-    const actions = el("div", "article-actions");
-    const inspectBtn = el("button", "inspect-btn", "Đọc & chọn bằng chứng");
-    inspectBtn.type = "button";
-    inspectBtn.addEventListener("click", () => openArticleDrawer(postKey));
-    const createBtn = el("button", "hero-btn primary", "Tạo bài từ nguồn này");
-    createBtn.type = "button"; createBtn.addEventListener("click", () => BTIComposer.fromArticle(postKey));
-    const isSaved = savedBookmarks.has(postKey);
-    const saveBtn = el("button", `bookmark-btn ${isSaved ? "saved" : ""}`, isSaved ? "📌 Đã lưu" : "📌 Lưu bài");
-    saveBtn.type = "button";
-    saveBtn.addEventListener("click", () => {
-      const before = new Set(savedBookmarks);
-      if (savedBookmarks.has(postKey)) savedBookmarks.delete(postKey); else savedBookmarks.add(postKey);
-      if (!persistBookmarks(before)) savedBookmarks = before;
-      if (savedFilterActive) refreshArticlesFromControls(false);
-      else renderArticles(null, false);
-    });
-    const extLink = el("a", "", "Mở nguồn gốc ↗");
-    extLink.href = item.citation?.source_url || item.url;
-    extLink.target = "_blank";
-    extLink.rel = "noopener";
-    actions.append(createBtn, inspectBtn, saveBtn, extLink);
-    provenance.append(metrics);
-    card.append(meta, heading, articleImages(item, true), preview, badges, actions, provenance);
-    root.append(card);
-  }
+  for (const item of items) root.append(articleCard(item, {audit: true}));
   renderPaginationBar("#article-pagination", currentArticleData.pagination, offset => refreshArticlesFromControls(false, offset));
 }
 
@@ -842,7 +876,7 @@ async function openArticleDrawer(postKey, updateURL = true) {
   if (updateURL) readerURL("article", cleanKey);
   const backdrop = $("#drawer-backdrop");
   const body = $("#drawer-body");
-  $("#drawer-eyebrow").textContent = "TRÍCH ĐOẠN NGUỒN · PHÂN BIỆT LỜI NGUỒN VÀ SUY LUẬN";
+  $("#drawer-eyebrow").textContent = "BẢN LƯU NGUỒN · TOÀN VĂN ĐỌC TRÊN BINANCE";
   $("#drawer-title").textContent = "Đang tải bài nghiên cứu…";
   body.replaceChildren(el("div", "empty", "Đang truy xuất dữ liệu kiểm toán…"));
   backdrop.hidden = false;
@@ -873,6 +907,7 @@ async function openArticleDrawer(postKey, updateURL = true) {
       if (!persistBookmarks(before)) savedBookmarks = before;
       const saved = savedBookmarks.has(cleanKey);
       saveBtn.textContent = saved ? "📌 Đã lưu trong tủ sách" : "📌 Lưu bài này";
+      syncArticleBookmarks();
       saveBtn.classList.toggle("saved", saved);
       if (savedFilterActive) refreshArticlesFromControls(false);
       else renderArticles(null, false);
@@ -897,15 +932,18 @@ async function openArticleDrawer(postKey, updateURL = true) {
     create.addEventListener("click", () => BTIComposer.fromArticle(cleanKey));
     navBar.append(create, prevBtn, saveBtn, nextBtn, add, share);
     body.append(navBar);
+    const full = fullPostLink(item, "Đọc toàn bộ bài trên Binance ↗");
+    if (full) body.append(full);
+    body.append(articleEngagement(item));
 
 
     const excerptSec = el("section", "drawer-section");
     excerptSec.append(
-      el("h4", "", "1. Nguồn nói gì?"),
+      el("h4", "", "1. Trích đoạn được phép công khai"),
       el("blockquote", "article-quote", `“${item.excerpt}”`),
       el("small", "", `Tác giả: ${item.author} (@${item.username || item.entity_slug}) · Xuất bản gốc: ${when(item.published_at)} · Thu thập: ${when(item.fetched_at)} · Phiên bản v${item.version} (${item.body_chars} ký tự) · SHA-256: ${String(item.checksum || "").slice(0, 20)}…`)
     );
-    const original = el("a", "content-link", "Đọc nguồn gốc ↗");
+    const original = el("a", "content-link", "Bản nguồn đã quan sát ↗");
     original.href = item.citation?.source_url || item.url; original.target = "_blank"; original.rel = "noopener";
     excerptSec.append(articleImages(item), original);
     body.append(excerptSec);
@@ -1385,16 +1423,7 @@ async function refreshTodaySources() {
     const data = await getJSON("/api/articles?sort=latest&has_images=1&limit=3");
     root.replaceChildren();
     if (!data.items.length) root.append(el("p", "empty", "Chưa ghi nhận nguồn có link ảnh hợp lệ. Bạn vẫn có thể tạo bài chữ hoặc tìm trong Kho nguồn; không có ảnh thay thế tự động."));
-    for (const item of data.items) {
-      const card = el("article", "panel article-card");
-      card.append(el("h3", "", item.title), el("p", "sample-note", `${item.author} · Xuất bản gốc: ${when(item.published_at)}`));
-      card.append(articleImages(item, true));
-      const create = el("button", "hero-btn primary", "Tạo bài từ nguồn này"); create.type = "button";
-      create.addEventListener("click", () => BTIComposer.fromArticle(item.post_id));
-      const read = el("button", "inspect-btn", "Đọc nguồn"); read.type = "button";
-      read.addEventListener("click", () => openArticleDrawer(item.post_id));
-      const actions = el("div", "article-actions"); actions.append(create, read); card.append(actions); root.append(card);
-    }
+    for (const item of data.items) root.append(articleCard(item));
   } catch (_err) { sectionError("#today-suggestions", refreshTodaySources, "Chưa tải được nguồn gợi ý. Các bản nháp riêng của bạn vẫn dùng được."); }
 }
 
@@ -1477,14 +1506,7 @@ async function refreshNew(offset = 0) {
     $("#watch-mark-read").hidden = !watch || mode !== "discovered";
     const root = $("#new-grid"); root.replaceChildren();
     if (!data.items.length) root.append(el("p", "empty", "Chưa có bài khớp. Không đồng nghĩa nguồn không có nội dung mới."));
-    for (const item of data.items) {
-      const card = el("article", "panel article-card");
-      card.append(el("h3", "", item.title), el("p", "", `${item.author} · Xuất bản: ${when(item.published_at)} · Mới biết: ${when(item.first_seen_at)}`), el("p", "", item.excerpt));
-      card.append(articleImages(item, true));
-      const actions = el("div", "article-actions"), open = el("button", "inspect-btn", "Mở bài & chọn bằng chứng");
-      open.type = "button"; open.addEventListener("click", () => openArticleDrawer(item.post_id));
-      actions.append(open); card.append(actions); root.append(card);
-    }
+    for (const item of data.items) root.append(articleCard(item, {discovered: true}));
     renderPaginationBar("#new-pagination", data.pagination, refreshNew);
   } catch (_e) {
     if (seq === newReqSeq) { listState("new", "error"); sectionError("#new-grid", () => refreshNew(offset)); }

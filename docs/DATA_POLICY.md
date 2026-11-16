@@ -15,6 +15,11 @@ recognition and engagement at their actual trust levels. Preserve provenance,
 periods, timestamps and missing fields. No amount of follower engagement or an
 influence award establishes audited trading skill.
 
+Full normalized evidence bodies stay private. Compact source cards may signal
+that an excerpt is truncated, but **Hiện thêm trên Binance** navigates to the
+original post instead of publishing a full-body API or proxy. A missing engagement
+value is unknown, not zero; observed counts are not live or proof of performance.
+
 Personal research and editable drafts live in the user's browser, not on the
 server. Private backups may contain notes and full source references and should
 not enter Git or public posts. Draft post exports omit private notes and recheck

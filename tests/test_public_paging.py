@@ -4,7 +4,7 @@ import json
 import unittest
 import threading
 
-from bti.db import connect
+from bti.db import connect, public_excerpt
 from bti.public import articles, article_detail, dossier, dossier_listing, evidence_ledger, evidence_listing, overview
 from bti.research import research_brief, store_source_claim
 from bti.server import create_server
@@ -82,6 +82,29 @@ class PublicPagingTests(unittest.TestCase):
         self.assertEqual(evidence_listing(self.db, q="entity-alpha", limit=1, offset=1)["sample_count"], 0)
         self.assertIsNone(article_detail(self.db, "recent-complete"))
         self.assertEqual(dossier_listing(self.db, limit=1, offset=1, now=NOW)["items"], [])
+
+    def test_preview_truncation_distinguishes_short_posts_without_exposing_private_bodies(self):
+        self.seed_window_fixture()
+        short = "A short synthetic source observation."
+        long = "Synthetic public observation. " * 40 + "PRIVATE_FULL_POST_TAIL"
+        with connect(self.db) as conn:
+            for post_id, text in (("recent-complete", short), ("recent-partial", long)):
+                conn.execute(
+                    "UPDATE content_versions SET normalized_text=?,excerpt=? "
+                    "WHERE content_id=(SELECT id FROM contents WHERE external_id=?)",
+                    (text, public_excerpt(text), post_id),
+                )
+            conn.commit()
+        page = self.article_page()
+        by_id = {item["post_id"]: item for item in page["items"]}
+        self.assertFalse(by_id["recent-complete"]["excerpt_truncated"])
+        self.assertTrue(by_id["recent-partial"]["excerpt_truncated"])
+        self.assertEqual(by_id["recent-complete"]["excerpt"], short)
+        for post_id in ("recent-complete", "recent-partial"):
+            detail = article_detail(self.db, post_id)
+            self.assertEqual(detail["excerpt_truncated"], by_id[post_id]["excerpt_truncated"])
+            self.assertNotIn("PRIVATE_FULL_POST_TAIL", json.dumps(detail))
+        self.assertNotIn("PRIVATE_FULL_POST_TAIL", json.dumps(page))
 
     def test_exact_verified_award_cohort_and_lightweight_dossiers(self):
         self.seed_window_fixture()

@@ -993,7 +993,8 @@ def articles(
                SELECT c.id,c.external_id,c.title,c.canonical_url,c.author,c.language,c.published_at,c.first_seen_at,
                       cv.id AS version_id,c.entity_id,cv.version_no,cv.fetched_at,cv.excerpt,e.slug AS entity_slug,e.display_name,
                       s.url AS source_url,s.source_type,cv.metadata_json,cv.checksum,e.source_uid,
-                      ev.observed_at AS engagement_observed_at,ev.value_json
+                      ev.observed_at AS engagement_observed_at,ev.value_json,
+                      cv.normalized_text=cv.excerpt AS excerpt_is_full
                FROM contents c
                JOIN entities e ON e.id=c.entity_id
                JOIN sources s ON s.id=c.source_id
@@ -1063,9 +1064,10 @@ def articles(
             continue
         provenance_type = metadata.get("provenance_type", "direct_public_response")
         author_display = row["author"] or row["display_name"]
+        excerpt = public_excerpt(row["excerpt"] or "")
         vi_intel = analyze_vietnamese_context(
             title=row["title"],
-            excerpt=public_excerpt(row["excerpt"] or ""),
+            excerpt=excerpt,
             language=row["language"],
             author=author_display,
             provenance_type=provenance_type,
@@ -1098,7 +1100,8 @@ def articles(
             "title": row["title"], "url": row["canonical_url"], "author": author_display,
             "entity_slug": row["entity_slug"], "published_at": row["published_at"],
             "first_seen_at": row["first_seen_at"], "fetched_at": row["fetched_at"],
-            "version": row["version_no"], "excerpt": public_excerpt(row["excerpt"] or ""),
+            "version": row["version_no"], "excerpt": excerpt,
+            "excerpt_truncated": not row["excerpt_is_full"] or excerpt != row["excerpt"],
             "language": vi_intel["language_code"],
             "provenance_type": provenance_type,
             "quality": {"audited": quality_audited, "gate_version": metadata.get("quality_gate_version"),
@@ -1307,9 +1310,10 @@ def article_detail(db_path: str | Path, post_key: str) -> dict[str, Any] | None:
         provenance_type = metadata.get("provenance_type", "direct_public_response")
         provenance_url = metadata.get("archive_snapshot_url") or row["source_url"]
         author_display = row["author"] or row["display_name"]
+        excerpt = public_excerpt(row["excerpt"] or "")
         vi_intel = analyze_vietnamese_context(
             title=row["title"],
-            excerpt=public_excerpt(row["excerpt"] or ""),
+            excerpt=excerpt,
             language=row["language"],
             author=author_display,
             provenance_type=provenance_type,
@@ -1399,7 +1403,8 @@ def article_detail(db_path: str | Path, post_key: str) -> dict[str, Any] | None:
             "version": row["version_no"],
             "checksum": row["checksum"],
             "body_chars": row["body_chars"],
-            "excerpt": public_excerpt(row["excerpt"] or ""),
+            "excerpt": excerpt,
+            "excerpt_truncated": excerpt != row["normalized_text"],
             "language": vi_intel["language_code"],
             "provenance_type": provenance_type,
             "engagement": engagement,
