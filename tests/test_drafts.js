@@ -158,6 +158,17 @@ test("rendered posts preserve wording and complete citations and disclaimer, nev
   assert.ok(!output.includes(item.notes));
 });
 
+test("long source headings keep an abbreviated citation and the complete private reference", () => {
+  const item = draft();
+  const heading = Array.from({length: 23}, (_, i) => `synthetic${i + 1}`).join(" ");
+  item.sources[0].title = heading;
+  const text = renderText(item);
+  assert.match(text, /synthetic16…/);
+  assert.ok(!text.includes("synthetic17"));
+  assert.ok(text.includes(item.sources[0].url));
+  assert.equal(item.sources[0].title, heading);
+});
+
 test("export readiness counts the full rendered post including title, citations and disclaimer", () => {
   const short = draft();
   assert.equal(checkDraft(short).ok, true);

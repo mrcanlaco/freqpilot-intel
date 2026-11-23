@@ -26,6 +26,8 @@
 !/scripts/run.ps1
 !/scripts/deploy-local.ps1
 !/scripts/verify.ps1
+!/scripts/square-draft.js
+!/scripts/square-streams.js
 !/ops/
 /ops/*
 !/ops/windows_supervisor.py

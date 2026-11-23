@@ -16,5 +16,5 @@ node --check src/bti/static/composer.js
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 node --check src/bti/static/images.js
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-node --test tests/test_workspace.js tests/test_drafts.js tests/test_images.js
+node --test tests/test_workspace.js tests/test_drafts.js tests/test_images.js tests/test_square_draft.js
 exit $LASTEXITCODE

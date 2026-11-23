@@ -128,12 +128,17 @@
     const lines = [];
     if (draft.title) lines.push(draft.title, "");
     lines.push(draft.body, "", "Nguồn công khai đối chiếu (chưa xác minh độc lập):");
-    draft.sources.forEach((source, index) => {
-      lines.push(`${index + 1}. ${source.author} — ${source.title}`,
-        source.url,
-        `Ngày gốc: ${source.published_at || "Chưa biết"} · Phiên bản: ${source.version}`);
-      if (source.source_url !== source.url) lines.push(`Bản nguồn quan sát: ${source.source_url}`);
-    });
+    const citations = new Set();
+    for (const source of draft.sources) {
+      // Some platform titles are excerpted first sentences. Keep the full title in the private backup.
+      const words = source.title.trim().split(/\s+/);
+      const title = words.length > 16 ? words.slice(0, 16).join(" ") + "…" : source.title;
+      const citation = [`${source.author} — ${title}`, source.url,
+        `Ngày gốc: ${source.published_at || "Chưa biết"} · Phiên bản: ${source.version}`];
+      if (source.source_url !== source.url) citation.push(`Bản nguồn quan sát: ${source.source_url}`);
+      citations.add(citation.join("\n"));
+    }
+    Array.from(citations).forEach((citation, index) => lines.push(`${index + 1}. ${citation}`));
     lines.push("", DISCLAIMER);
     return lines.join("\n");
   }

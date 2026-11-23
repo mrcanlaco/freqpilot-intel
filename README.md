@@ -71,7 +71,7 @@ return 404 until an operator supplies a complete reviewed publication bundle.
 
 ## Run locally
 
-Requirements: Python 3.11+. Node.js 22+ is needed only for JavaScript tests.
+Requirements: Python 3.11+. Node.js 22+ runs the JavaScript tests and the optional draft CLI.
 The application uses Python's standard library and needs no API key.
 
 ```sh
@@ -103,6 +103,30 @@ or upload service. Importing source material and enabling collection are explici
 operator CLI/configuration actions; review source access and redistribution rights
 first. Do not use credentials with trading or withdrawal permissions.
 
+## Choose a stream and draft a Square post
+
+The operator CLI runs in your private workspace using Node 22.13+ and its built-in SQLite module. Start by listing streams. After choosing one, it returns up to three pitches with their evidence, publication and capture times, editorial angle and comparison with the last offer. Only an explicit pitch selection creates a draft.
+
+~~~sh
+node scripts/square-draft.js
+node scripts/square-draft.js --stream trader --out /path/to/private/editorial
+node scripts/square-draft.js --stream trader --pitch PITCH_ID --out /path/to/private/editorial
+~~~
+
+| Stream | Editorial question and evidence |
+| --- | --- |
+| `market` · Toàn cảnh thị trường | Which topics gained or lost coverage? Compare article counts over two adjacent seven-day windows. These counts measure the Intel corpus. |
+| `analysis` · Phân tích chuyên sâu | Do two attributed conditions agree? Require two authors within fourteen days with a comparable explicit USD threshold for the same asset and condition type. Price confirmation requires separate market data. |
+| `trader` · Góc nhìn trader | What did this author say in the last seven days? Compare an earlier statement on the same asset when available in the fourteen-day window. Any observed engagement is labelled separately. |
+
+The runner reads the permitted article projections underlying the three Intel brief sections. Use `--as-of YYYY-MM-DDTHH:MM:SSZ` for a historical replay, or `--date YYYY-MM-DD` for the end of that UTC day. The latest public source version must already have been captured by the cutoff. Later claims and observations are excluded. A current revocation still applies on replay. For bounded access the claim streams inspect up to 24 recent sources in publication order; aggregate coverage requires complete paging. Empty windows and insufficient evidence yield a reason in the selected stream.
+
+Reuse the same directory. Its private SQLite ledger remembers proposals. Repeated requests list previously offered IDs separately, and an existing draft package is preserved across retries. Each package has a full source manifest in `pitch.json`, the editable `draft.json` and the generated `post.txt`. The manifest ties the draft to its stream, pitch and cutoff.
+
+Before handing the text to a private publisher, repeat the selection command and require a returned package directory. This rechecks source availability, claims, revisions and included observations. To edit the text, import `draft.json` under **Bài viết → Sao lưu và chuyển thiết bị → Nhập bản sao JSON** and export from the composer. The official short-text script accepts reviewed text via `--text`. [Binance Square posting guide](https://www.binance.com/en/skills/detail/binance/square-post)
+
+An existing scheduler can invoke `node scripts/square-draft.js --job --config /path/to/private/job.json` with an explicit configuration such as `{"stream":"market","out":"/path/to/private/editorial"}`. This job offers pitches for that stream. Draft selection and submission remain separate operator actions.
+
 ## Tests
 
 Run bootstrap with `--config-only` before testing. In PowerShell:
@@ -121,7 +145,7 @@ node --check src/bti/static/workspace.js
 node --check src/bti/static/drafts.js
 node --check src/bti/static/composer.js
 node --check src/bti/static/images.js
-node --test tests/test_workspace.js tests/test_drafts.js tests/test_images.js
+node --test tests/test_workspace.js tests/test_drafts.js tests/test_images.js tests/test_square_draft.js
 ```
 
 CI also exercises the signed executor protocol, hybrid shared authority, bounded

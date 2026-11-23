@@ -204,46 +204,40 @@ def build_intelligence_brief(
             "total_interactions": item.get("total_interactions"),
         })
 
-    listing = dossier_listing(
+    articles_by_author: dict[str, list[dict[str, Any]]] = {}
+    for item in sorted(window_articles, key=lambda row: row["published_at"], reverse=True):
+        articles_by_author.setdefault(item["entity_slug"], []).append(item)
+
+    ranked_authors = dossier_listing(
         db_path,
         window=window,
         date_from=date_from,
         date_to=date_to,
         sort="interactions_total",
         now=current,
-    )
+    )["items"] if window_articles else []
     full_dossiers = {
         entry["slug"]: entry
         for entry in dossiers(db_path, include_official=False, lightweight=False)
-    }
+    } if ranked_authors else {}
 
     spotlight_items = []
-    for ranked in listing["items"]:
+    for ranked in ranked_authors:
         eng_win = ranked.get("engagement_window") or {}
-        if (eng_win.get("sample_n") or 0) <= 0 and window_articles:
+        matching_articles = articles_by_author.get(ranked["slug"])
+        if not matching_articles or (eng_win.get("sample_n") or 0) <= 0:
             continue
         detail = full_dossiers.get(ranked["slug"], ranked)
-        if normalized_asset or normalized_topic:
-            entity_matches = any(
-                item["entity_slug"] == ranked["slug"] for item in window_articles
-            )
-            if not entity_matches:
-                continue
         pillars = detail.get("pillars") or {}
         perf_pillar = pillars.get("performance") or {}
         rec_pillar = pillars.get("recognition") or {}
         eng_pillar = pillars.get("engagement") or {}
         perf_levels = list(perf_pillar.get("verification_levels") or [])
         has_platform_pnl = any(level in {"platform", "official"} for level in perf_levels)
-        recent_titles = []
-        for crow in (detail.get("contents") or [])[:3]:
-            recent_titles.append({
-                "post_id": crow.get("post_id"),
-                "title": crow.get("title"),
-                "url": crow.get("canonical_url"),
-                "published_at": crow.get("published_at"),
-                "version": crow.get("version_no"),
-            })
+        recent_titles = [
+            {key: article[key] for key in ("post_id", "title", "url", "published_at", "version")}
+            for article in matching_articles[:3]
+        ]
         spotlight_items.append({
             "slug": detail["slug"],
             "display_name": detail["display_name"],
