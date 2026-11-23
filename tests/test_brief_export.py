@@ -259,8 +259,16 @@ class BriefExportTests(unittest.TestCase):
         self.assertTrue(spotlights["eligible"])
         sp = spotlights["items"][0]
         self.assertEqual(sp["slug"], "creator-alpha")
+        self.assertEqual(sp["recent_articles"][0]["url"], digest["notable_articles"][0]["url"])
         self.assertFalse(sp["three_pillars"]["performance"]["has_platform_verified_pnl"])
         self.assertEqual(sp["three_pillars"]["recognition"]["status"], "available")
+
+        empty = build_intelligence_brief(
+            self.db, window="custom", date_from="2026-09-01", date_to="2026-09-01", now=NOW,
+        )
+        for section in empty["sections"].values():
+            self.assertFalse(section["eligible"])
+            self.assertEqual(section["sample_count"], 0)
 
     def test_private_or_revoked_dependencies_never_leak_into_brief(self) -> None:
         self._seed_record(
