@@ -130,7 +130,10 @@
     lines.push(draft.body, "", "Nguồn công khai đối chiếu (chưa xác minh độc lập):");
     const citations = new Set();
     for (const source of draft.sources) {
-      const citation = [`${source.author} — ${source.title}`, source.url,
+      // Some platform titles are excerpted first sentences. Keep the full title in the private backup.
+      const words = source.title.trim().split(/\s+/);
+      const title = words.length > 16 ? words.slice(0, 16).join(" ") + "…" : source.title;
+      const citation = [`${source.author} — ${title}`, source.url,
         `Ngày gốc: ${source.published_at || "Chưa biết"} · Phiên bản: ${source.version}`];
       if (source.source_url !== source.url) citation.push(`Bản nguồn quan sát: ${source.source_url}`);
       citations.add(citation.join("\n"));
