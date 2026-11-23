@@ -29,8 +29,16 @@
         || !Number.isFinite(Date.parse(value)) || new Date(value).toISOString() !== value) throw new Error("Thời điểm bản nháp không hợp lệ.");
     return value;
   }
-  function validateDraft(raw, legacy = false) {
-    fields(raw, legacy ? LEGACY_DRAFT_FIELDS : DRAFT_FIELDS);
+  function editorialOrigin(origin) {
+    fields(origin, ["stream", "pitch_id", "as_of", "replay"]);
+    if (!["market", "analysis", "trader"].includes(origin.stream) || typeof origin.replay !== "boolean"
+        || typeof origin.pitch_id !== "string" || !/^[0-9a-f]{24}$/.test(origin.pitch_id)) throw new Error("Thông tin đề bài không hợp lệ.");
+    return {...origin, as_of: timestamp(origin.as_of)};
+  }
+  function validateDraft(raw, version = 3) {
+    const legacy = version === 1;
+    const hasOrigin = version === 3 && raw && Object.hasOwn(raw, "editorial");
+    fields(raw, legacy ? LEGACY_DRAFT_FIELDS : hasOrigin ? [...DRAFT_FIELDS, "editorial"] : DRAFT_FIELDS);
     if (![1, 2].includes(raw.content_type) || !Array.isArray(raw.sources) || raw.sources.length > 20) throw new Error("Loại bài hoặc danh sách nguồn không hợp lệ (tối đa 20 nguồn).");
     const created = timestamp(raw.created_at), updated = timestamp(raw.updated_at);
     if (updated < created) throw new Error("Ngày cập nhật không được trước ngày tạo bản nháp.");
@@ -52,6 +60,7 @@
     return {
       id: identifier(raw.id), title: text(raw.title, 120), body: text(raw.body, 15000),
       content_type: raw.content_type, notes: text(raw.notes, 4000), sources, images: selected,
+      ...(hasOrigin ? {editorial: editorialOrigin(raw.editorial)} : {}),
       created_at: created, updated_at: updated
     };
   }
@@ -62,23 +71,24 @@
   }
   function validateBackup(raw) {
     fields(raw, STATE_FIELDS);
-    if (![1, 2].includes(raw.version) || !Array.isArray(raw.drafts) || raw.drafts.length > 100) throw new Error("Bản sao không đúng định dạng bản nháp v1/v2 (tối đa 100 bài).");
+    if (![1, 2, 3].includes(raw.version) || !Array.isArray(raw.drafts) || raw.drafts.length > 100) throw new Error("Bản sao không đúng định dạng bản nháp v1/v2/v3 (tối đa 100 bài).");
     const ids = new Set();
     const drafts = Array.from(raw.drafts, item => {
-      const draft = validateDraft(item, raw.version === 1);
+      const draft = validateDraft(item, raw.version);
       if (ids.has(draft.id)) throw new Error("Mã bản nháp bị trùng.");
       ids.add(draft.id);
       return draft;
     });
     if (raw.active_id !== null && !ids.has(raw.active_id)) throw new Error("Bản nháp đang chọn không tồn tại.");
-    const state = {version: 2, active_id: raw.active_id, drafts};
+    const state = {version: Math.max(2, raw.version), active_id: raw.active_id, drafts};
     encoded(state);
     return state;
   }
   function encodeBackup(state) { return encoded(validateBackup(state)); }
-  function newDraft({title = "", body = "", content_type = 1, notes = "", sources = [], images = []} = {}) {
+  function newDraft({title = "", body = "", content_type = 1, notes = "", sources = [], images = [], editorial} = {}) {
     const stamp = new Date().toISOString();
-    return validateDraft({id: crypto.randomUUID(), title, body, content_type, notes, sources, images, created_at: stamp, updated_at: stamp});
+    return validateDraft({id: crypto.randomUUID(), title, body, content_type, notes, sources, images,
+      ...(editorial === undefined ? {} : {editorial}), created_at: stamp, updated_at: stamp});
   }
   function createStore(storage) {
     let saved;
@@ -111,6 +121,7 @@
       importBackup(raw) {
         const incoming = validateBackup(raw);
         return commit(next => {
+          next.version = Math.max(next.version, incoming.version);
           const remap = new Map();
           for (const draft of incoming.drafts) {
             const key = crypto.randomUUID();

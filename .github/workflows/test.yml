@@ -23,6 +23,8 @@ jobs:
         run: |
           python -m compileall -q src tests
           node --check src/bti/static/app.js
+          node --check src/bti/static/editorial.js
+          node --check src/bti/static/square-streams.js
           node --check src/bti/static/workspace.js
           node --check src/bti/static/drafts.js
           node --check src/bti/static/composer.js

@@ -111,26 +111,30 @@ function readerURL(kind, key) {
 
 function navigateToSection(id, options = {}) {
   id = String(id || "today").replace(/^#/, "");
-  const target = document.getElementById(id) || document.getElementById("today");
+  if (id === "editorial") id = "today";
+  const editorial = BTIDesk.parseRoute(id);
+  const target = document.getElementById(editorial ? "editorial" : id) || document.getElementById("today");
   const page = sectionPages[id] || target.closest("[data-page]")?.dataset.page || "home";
   document.querySelectorAll("[data-page]").forEach(node => { node.hidden = node.dataset.page !== page; });
-  const title = {home:"Hôm nay", drafts:"Bài viết của tôi", writing:"Soạn bài Square", discover:"Kho nguồn", brief:"Gợi ý bài viết", sources:"Hồ sơ nguồn", research:"Nghiên cứu của tôi", following:"Theo dõi", more:"Nguồn dữ liệu & trợ giúp"}[page];
-  document.title = `${title} · Future Intelligence`;
+  const title = {home:"Bàn biên tập", editorial: editorial ? BTIStreams.STREAMS[editorial.stream].name : "Đề bài", drafts:"Bản nháp", writing:"Soạn bài Square", discover:"Kho nguồn", brief:"Gợi ý bài viết", sources:"Hồ sơ nguồn", research:"Nghiên cứu của tôi", following:"Theo dõi", more:"Nguồn dữ liệu & trợ giúp"}[page];
+  document.title = `${title} · FreqPilot Intel`;
+  document.body.classList.toggle("desk-mode", ["home", "editorial", "drafts", "writing"].includes(page));
   for (let node = target; node; node = node.parentElement) {
     if (node.tagName === "DETAILS") node.open = true;
   }
   document.querySelectorAll(".nav-item").forEach(link => {
     const group = value => ["discover", "sources", "following", "brief"].includes(value) ? "library" : ["drafts", "writing"].includes(value) ? "posts" : value;
-    const active = group(sectionPages[link.dataset.view]) === group(page);
+    const active = group(sectionPages[link.dataset.view]) === group(page === "editorial" ? "home" : page);
     link.classList.toggle("active", active);
     if (active) link.setAttribute("aria-current", "page"); else link.removeAttribute("aria-current");
   });
   globalThis.BTIComposer?.show(page);
   if (options.history !== false) {
-    const url = new URL(location.href); url.hash = target.id;
+    const url = new URL(location.href); url.hash = editorial ? id : target.id;
     if (url.href !== location.href) history.pushState(null, "", url);
   }
   if (options.load !== false) {
+    BTIDesk.show(editorial);
     lazySections.get(target.id)?.();
     const primary = {home:"today", discover: "bai-viet", brief: "square-brief", sources: "ho-so", following: "moi"}[page];
     if (primary && primary !== target.id) lazySections.get(primary)?.();
@@ -600,7 +604,7 @@ function setupNav() {
     const url = new URL(link.href, location.href);
     if (url.origin !== location.origin || url.pathname !== location.pathname || url.search !== location.search || !url.hash) return;
     const id = decodeURIComponent(url.hash.slice(1));
-    if (!document.getElementById(id)) return;
+    if (!document.getElementById(id) && !BTIDesk.parseRoute(id)) return;
     event.preventDefault();
     navigateToSection(id, {focus: true});
   });
@@ -1809,7 +1813,9 @@ async function bootResearch() {
   });
   BTIWorkspace.start({getJSON, openArticle: openArticleDrawer, loadNew: refreshNew, navigate: navigateToSection});
   BTIComposer.start({getJSON, navigate:navigateToSection, openArticle:openArticleDrawer, clearReader:() => closeDrawer()});
-  lazySection("today", refreshTodaySources);
+  BTIDesk.start(navigateToSection);
+  lazySection("today", BTIDesk.freshness);
+  lazySection("desk-more-sources", refreshTodaySources);
   lazySection("bai-viet", () => refreshArticlesFromControls(false, Number(new URL(location.href).searchParams.get("a.offset") || 0), false));
   lazySection("ho-so", () => refreshDossiersFromControls(false, Number(new URL(location.href).searchParams.get("d.offset") || 0), false));
   lazySection("bang-chung", () => refreshEvidence());
@@ -1821,7 +1827,7 @@ async function bootResearch() {
   lazySection("metrics", refreshOverview);
   window.addEventListener("popstate", () => restoreRoute());
   window.addEventListener("hashchange", () => restoreRoute(false, true));
-  headerState("Chọn bài viết để nghiên cứu · Dữ liệu nguồn công khai");
+  headerState("Nguồn công khai · Bản nháp lưu trên thiết bị");
   restoreRoute(true);
 }
 bootResearch().catch(() => sectionError("#article-grid", () => restoreRoute(true), "Không khởi tạo được giao diện. Có thể thử lại mà không xóa nghiên cứu riêng."));

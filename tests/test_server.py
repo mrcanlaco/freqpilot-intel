@@ -128,7 +128,8 @@ class ServerSecurityTests(unittest.TestCase):
             create_server(self.db, "0.0.0.0", 0)
 
     def test_static_assets_and_public_detail_routes(self) -> None:
-        for path in ("/", "/assets/app.js", "/assets/style.css", "/assets/workspace.js"):
+        for path in ("/", "/assets/app.js", "/assets/style.css", "/assets/workspace.js",
+                     "/assets/square-streams.js", "/assets/editorial.js"):
             with self.subTest(path=path):
                 status, headers, body = self.request("GET", path)
                 self.assertEqual(status, 200)

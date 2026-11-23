@@ -3,7 +3,7 @@
 const fs = require("node:fs/promises");
 const path = require("node:path");
 const {parseArgs} = require("node:util");
-const {STREAMS, ideas, readPublic, digest, ORIGIN} = require("./square-streams.js");
+const {STREAMS, ideas, makeDraft, readPublic, digest} = require("./square-streams.js");
 require("../src/bti/static/workspace.js");
 require("../src/bti/static/drafts.js");
 
@@ -65,46 +65,6 @@ function recordOffers(db, candidates, replay) {
     db.exec("COMMIT");
   } catch (err) { db.exec("ROLLBACK"); throw err; }
   return {pitches, previously_offered: previousIds};
-}
-
-function comparison(a, end) {
-  const valid = (a.evidence || []).filter(row => row.pillar === "engagement" && row.kind === "post_metrics" &&
-    row.verification_level === "platform" && row.checksum === a.checksum && row.version === a.version &&
-    Date.parse(row.observed_at) >= Date.parse(a.published_at) && Date.parse(row.observed_at) <= end &&
-    ["views", "comments"].every(k => Number.isSafeInteger(row.value?.[k]) && row.value[k] >= 0)
-  ).sort((x,y) => Date.parse(y.observed_at) - Date.parse(x.observed_at));
-  const last = valid[0], first = last && valid.find(v => Date.parse(v.observed_at) < Date.parse(last.observed_at));
-  if (!first || (first.value.views === last.value.views && first.value.comments === last.value.comments)) return null;
-  const fmt = n => n.toLocaleString("vi-VN");
-  return {sources: [first,last].map(v => BTIWorkspace.snapshot(a, v.id)),
-    text: `Về độ phủ, lúc ${first.observed_at} Intel ghi nhận ${fmt(first.value.views)} lượt xem và ${fmt(first.value.comments)} bình luận. Đến ${last.observed_at}, bài có ${fmt(last.value.views)} lượt xem và ${fmt(last.value.comments)} bình luận.`};
-}
-
-async function makeDraft(p, get) {
-  const end = Date.parse(p.as_of);
-  const refs = p.stream === "market" ? [p.sources[0], p.sources.at(-1)] : p.sources;
-  const sources = [], articles = [];
-  for (const ref of refs) {
-    const a = await get(`/api/articles/${ref.post_id}`);
-    if (!a || a.post_id !== ref.post_id || a.version !== ref.version || a.fetched_at !== ref.fetched_at ||
-        a.author !== ref.author || a.url !== ref.url || a.published_at !== ref.published_at ||
-        !/^[a-f0-9]{64}$/.test(a.checksum) || (ref.checksum && a.checksum !== ref.checksum) ||
-        (ref.claim_id && !a.claims?.some(c => c.id === ref.claim_id && c.statement === ref.statement &&
-          c.created_at === ref.claim_known_at && Date.parse(c.created_at) <= end))) return null;
-    sources.push(BTIWorkspace.snapshot({...a, engagement_observed_at: a.fetched_at}));
-    articles.push(a);
-  }
-  const heading = (p.replay ? "Nhìn lại · " : "") + p.title;
-  const links = refs.map(ref => `${ORIGIN}/api/articles/${ref.post_id}`).join("\n");
-  const draft = BTIDrafts.newDraft({title: heading, body: `${p.body}\n\nHồ sơ Intel:\n${links}`, sources});
-  if (p.stream === "trader") {
-    const context = comparison(articles[0], end);
-    if (context) {
-      const extended = BTIDrafts.newDraft({...draft, body: draft.body + "\n\n" + context.text, sources: [...context.sources, ...sources.slice(1)]});
-      if (BTIDrafts.checkDraft(extended).ok) return extended;
-    }
-  }
-  return BTIDrafts.checkDraft(draft).ok ? draft : null;
 }
 
 async function saveDraft(out, p, draft) {

@@ -19,6 +19,8 @@ STATIC_TYPES = {
     "index.html": "text/html; charset=utf-8",
     "style.css": "text/css; charset=utf-8",
     "app.js": "text/javascript; charset=utf-8",
+    "square-streams.js": "text/javascript; charset=utf-8",
+    "editorial.js": "text/javascript; charset=utf-8",
     "workspace.js": "text/javascript; charset=utf-8",
     "drafts.js": "text/javascript; charset=utf-8",
     "composer.js": "text/javascript; charset=utf-8",
@@ -87,18 +89,8 @@ class Handler(BaseHTTPRequestHandler):
         try:
             if path == "/":
                 self._static("index.html", head=head)
-            elif path == "/assets/style.css":
-                self._static("style.css", head=head)
-            elif path == "/assets/app.js":
-                self._static("app.js", head=head)
-            elif path == "/assets/workspace.js":
-                self._static("workspace.js", head=head)
-            elif path == "/assets/drafts.js":
-                self._static("drafts.js", head=head)
-            elif path == "/assets/composer.js":
-                self._static("composer.js", head=head)
-            elif path == "/assets/images.js":
-                self._static("images.js", head=head)
+            elif path.startswith("/assets/") and path.removeprefix("/assets/") in STATIC_TYPES and path != "/assets/index.html":
+                self._static(path.removeprefix("/assets/"), head=head)
             elif path in self.app.campaign_assets:
                 body, content_type, csp = self.app.campaign_assets[path]
                 self._send(body, content_type, head=head, csp=csp)

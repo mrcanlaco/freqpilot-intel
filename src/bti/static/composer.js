@@ -218,6 +218,11 @@
   }
   function renderEditor() {
     const d = current();
+    const origin = d?.editorial, context = $("#composer-origin");
+    context.hidden = !origin;
+    context.textContent = origin ? BTIStreams.STREAMS[origin.stream].name + " · "
+      + (origin.replay ? "Kỳ lịch sử" : "Đề tại thời điểm chọn") + " · "
+      + origin.as_of.slice(0, 10).split("-").reverse().join("/") + " " + origin.as_of.slice(11, 16) + " UTC" : "";
     for (const [selector, value] of [["#composer-title", d?.title || ""], ["#composer-body", d?.body || ""], ["#composer-type", String(d?.content_type || 1)], ["#composer-notes", d?.notes || ""]]) {
       const control = $(selector); control.value = value; control.disabled = !d;
     }
@@ -235,10 +240,22 @@
     if (!mutate(s => { if (!s.drafts.some(d => d.id === id)) throw new Error("Bản nháp không còn tồn tại."); s.active_id = id; })) return;
     message(); selectPane("editor"); api.clearReader(); api.navigate("composer", {focus:true});
   }
+  function findEditorial(origin) {
+    return store?.get().drafts.find(({editorial}) => editorial && editorial.pitch_id === origin.pitch_id
+      && editorial.stream === origin.stream && editorial.replay === origin.replay);
+  }
   function create(fields = {}, imageSeeds = []) {
     if (!ensureSafeSwitch()) return false;
+    const existing = fields.editorial && findEditorial(fields.editorial);
+    if (existing) {
+      openDraft(existing.id);
+      return true;
+    }
     const d = BTIDrafts.newDraft(fields);
-    if (!mutate(s => { s.drafts.unshift(d); s.active_id = d.id; })) { api.clearReader(); api.navigate("composer", {focus:true}); return false; }
+    if (!mutate(s => {
+      if (d.editorial) s.version = 3;
+      s.drafts.unshift(d); s.active_id = d.id;
+    })) { api.clearReader(); api.navigate("composer", {focus:true}); return false; }
     pending = false; mediaSeed = imageSeeds; message(); clearDownloads(); renderLibrary(); renderRecent(); selectPane("editor");
     api.clearReader(); api.navigate("composer", {focus:true});
     return true;
@@ -355,7 +372,8 @@
     const q = ($("#draft-search").value || "").trim().toLocaleLowerCase("vi");
     const drafts = store.get().drafts.filter(d => !q || `${d.title} ${d.body}`.toLocaleLowerCase("vi").includes(q));
     if (!drafts.length) {
-      root.append(node("p", "empty", q ? "Chưa có bài khớp từ khóa. Xóa tìm kiếm để xem lại các bản nháp." : "Bạn chưa có bản nháp. Tạo bài mới hoặc chọn nguồn để bắt đầu."));
+      root.append(node("p", "empty", q ? "Chưa có bài khớp từ khóa. Xóa tìm kiếm để xem lại các bản nháp." : "Bạn chưa có bản nháp trên thiết bị này."));
+      if (!q) root.append(action("Chọn luồng cho bài đầu tiên", () => api.navigate("today", {focus:true})));
       return;
     }
     for (const d of drafts) {
@@ -375,7 +393,7 @@
     const root = $("#today-drafts"); if ($("#today").hidden) return; root.replaceChildren();
     if (!store) { emptyStorageMessage(root); return; }
     const recent = store.get().drafts.slice().sort((a,b)=>b.updated_at.localeCompare(a.updated_at)).slice(0,3);
-    if (!recent.length) { root.append(node("p", "empty", "Chưa có bài đang viết. Bắt đầu từ một nguồn hoặc tạo bài trống.")); return; }
+    if (!recent.length) { root.append(node("p", "empty", "Chọn một luồng ở trên để bắt đầu. Bản nháp đã lưu sẽ hiện ở đây.")); return; }
     for (const d of recent) {
       const card = node("article", "panel draft-card");
       if (d.images.length) { const cover = node("div", "draft-cover"); cover.dataset.draftCover = d.id; card.append(cover); }
@@ -438,5 +456,5 @@
     window.addEventListener("beforeunload", e => { if (pending) { e.preventDefault(); e.returnValue = ""; } });
     renderLibrary(); renderRecent(); renderEditor();
   }
-  globalThis.BTIComposer = {start, show, create, fromArticle, fromSuggestion, addSource};
+  globalThis.BTIComposer = {start, show, create, fromArticle, fromSuggestion, addSource, openDraft, findEditorial};
 })();

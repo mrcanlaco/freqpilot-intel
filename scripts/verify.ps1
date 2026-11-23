@@ -8,6 +8,10 @@ python -m unittest discover -s tests -v
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 node --check src/bti/static/app.js
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+node --check src/bti/static/editorial.js
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+node --check src/bti/static/square-streams.js
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 node --check src/bti/static/workspace.js
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 node --check src/bti/static/drafts.js
