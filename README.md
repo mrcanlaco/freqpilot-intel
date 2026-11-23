@@ -71,7 +71,7 @@ return 404 until an operator supplies a complete reviewed publication bundle.
 
 ## Run locally
 
-Requirements: Python 3.11+. Node.js 22+ is needed only for JavaScript tests.
+Requirements: Python 3.11+. Node.js 22+ runs the JavaScript tests and the optional draft CLI.
 The application uses Python's standard library and needs no API key.
 
 ```sh
@@ -103,6 +103,32 @@ or upload service. Importing source material and enabling collection are explici
 operator CLI/configuration actions; review source access and redistribution rights
 first. Do not use credentials with trading or withdrawal permissions.
 
+## Generate a Vietnamese Square draft
+
+Run this one-shot command with a persistent, private output directory outside Git.
+It reads the hosted Intel brief and article evidence over HTTPS. The default
+window covers the last seven days. For a historical replay, add `--date YYYY-MM-DD`
+with the original UTC publication date. Historical drafts are labelled **Nhìn lại**.
+
+```sh
+node scripts/square-draft.js --out /path/to/private/drafts
+```
+
+The runner chooses the first brief article with a measurable change in views
+or comments between two public platform observations of the same revision.
+It checks the latest counts against the brief, article and timestamped evidence.
+A missing pair, an empty window or an already-drafted lead produces a JSON skip
+reason. Network and access failures stop the run. Each post ID can create one
+package in the chosen directory, even with overlapping invocations.
+
+**Bài viết → Sao lưu và chuyển thiết bị → Nhập bản sao JSON** opens `draft.json` for editing in the
+browser. The accompanying `post.txt` is the text at generation time. Before
+handing text to a private publisher, reopen the draft and export it from the
+composer to recheck both evidence records. The official Square short-text
+script accepts this reviewed text via `--text`. Publishing credentials,
+submission receipts and scheduling belong to the separate operator environment.
+[Binance Square posting guide](https://www.binance.com/en/skills/detail/binance/square-post)
+
 ## Tests
 
 Run bootstrap with `--config-only` before testing. In PowerShell:
@@ -121,7 +147,7 @@ node --check src/bti/static/workspace.js
 node --check src/bti/static/drafts.js
 node --check src/bti/static/composer.js
 node --check src/bti/static/images.js
-node --test tests/test_workspace.js tests/test_drafts.js tests/test_images.js
+node --test tests/test_workspace.js tests/test_drafts.js tests/test_images.js tests/test_square_draft.js
 ```
 
 CI also exercises the signed executor protocol, hybrid shared authority, bounded
