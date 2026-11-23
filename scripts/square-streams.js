@@ -69,7 +69,8 @@ function source(a, claim) {
 function proposal(stream, story, title, why, body, rows, developments, asOf) {
   const refs = rows.map(({article, claim}) => source(article, claim));
   const id = digest([stream, story, developments]).slice(0, 24);
-  return {id, stream, story, title: title.slice(0, 105), why_now: why, as_of: asOf, sources: refs, developments, body};
+  return {id, stream, story, brief_section: STREAMS[stream].section, title: title.slice(0, 105),
+    why_now: why, as_of: asOf, sources: refs, developments, body};
 }
 
 function counts(rows) {
@@ -152,7 +153,9 @@ function trader(claims, end, asOf) {
       "Trong cửa sổ đã kiểm tra, Intel chưa có phát biểu trước đủ điều kiện để kết luận tác giả đổi quan điểm.";
     const note = translated ? "Để kiểm tra phép so sánh, cần biết chuỗi giá dùng cho từng tài sản, giá đầu kỳ và cuối kỳ. Trích đoạn chưa cung cấp đủ các mốc đó." :
       "Nhận định trên thuộc về tác giả. Cần đối chiếu dữ liệu gốc cùng thời điểm trước khi coi đây là một diễn biến đã được xác nhận.";
-    const body = [`Ngày ${vnDate(a.published_at)}, ${a.author} viết rằng ${describe(c)}.`, context, note].join("\n\n");
+    const opening = translated ? `Trong bài ngày ${vnDate(a.published_at)}, ${a.author} dùng hai tỷ lệ trên để so sánh diễn biến của hai thị trường. Cả hai tỷ lệ đều do tác giả nêu.` :
+      `Ngày ${vnDate(a.published_at)}, ${a.author} viết: ${describe(c)}.`;
+    const body = [opening, context, note].join("\n\n");
     result.push(proposal("trader", a.entity_slug, title, why, body, earlier ? [entry, earlier] : [entry],
       [digest([a.entity_slug, c.asset, c.statement])], asOf));
     authors.add(a.entity_slug);

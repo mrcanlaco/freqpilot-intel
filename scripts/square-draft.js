@@ -3,7 +3,7 @@
 const fs = require("node:fs/promises");
 const path = require("node:path");
 const {parseArgs} = require("node:util");
-const {STREAMS, ideas, readPublic, digest} = require("./square-streams.js");
+const {STREAMS, ideas, readPublic, digest, ORIGIN} = require("./square-streams.js");
 require("../src/bti/static/workspace.js");
 require("../src/bti/static/drafts.js");
 
@@ -95,7 +95,8 @@ async function makeDraft(p, get) {
     articles.push(a);
   }
   const heading = (p.replay ? "Nhìn lại · " : "") + p.title;
-  const draft = BTIDrafts.newDraft({title: heading, body: p.body, sources});
+  const links = refs.map(ref => `${ORIGIN}/api/articles/${ref.post_id}`).join("\n");
+  const draft = BTIDrafts.newDraft({title: heading, body: `${p.body}\n\nHồ sơ Intel:\n${links}`, sources});
   if (p.stream === "trader") {
     const context = comparison(articles[0], end);
     if (context) {

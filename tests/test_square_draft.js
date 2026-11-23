@@ -50,6 +50,7 @@ test("market coverage and one-asset analysis produce distinct pitch sets at the 
   assert.equal(deep.pitches.length,1);
   assert.match(market.pitches[0].title,/Độ phủ/);
   assert.match(deep.pitches[0].title,/BTC.*135 USD/);
+  assert.equal(deep.pitches[0].brief_section,"conditional_scenarios");
   for (const p of [...market.pitches,...deep.pitches]) {
     assert.ok(p.sources.every(s => s.url && s.published_at <= p.as_of && s.fetched_at <= p.as_of));
     assert.match(p.change,/đầu tiên/);
@@ -58,6 +59,7 @@ test("market coverage and one-asset analysis produce distinct pitch sets at the 
   const picked = await run({...f,out,stream:"analysis",pitch:deep.pitches[0].id});
   const text = await fs.readFile(path.join(picked.directory,"post.txt"),"utf8");
   assert.match(text,/hai phía/);
+  assert.ok(text.includes(`https://intel.freqpilot.dev/api/articles/${deep.pitches[0].sources[0].post_id}`));
   assert.doesNotMatch(text,/lượt xem/);
   assert.equal((await run({...f,out,stream:"market",pitch:deep.pitches[0].id})).reason,"unknown_pitch_for_stream");
 });
