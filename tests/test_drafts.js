@@ -46,6 +46,25 @@ test("save and reload preserve editable wording, private notes and exact source 
   assert.equal(active(store.get()).body, "My editable interpretation.");
 });
 
+test("editorial provenance survives a private backup, remapped IDs and edits, and stays out of exported text", () => {
+  const origin = {stream: "trader", pitch_id: "a".repeat(24), as_of: stamp, replay: true};
+  const item = newDraft({body: "First wording", editorial: origin});
+  const incoming = {version: 3, active_id: item.id, drafts: [item]};
+  const disk = storage(JSON.stringify(backup())), store = createStore(disk);
+  store.importBackup(JSON.parse(encodeBackup(incoming)));
+  store.commit(state => { active(state).body = "Edited wording"; });
+  const reloaded = createStore(disk).get(), selected = active(reloaded);
+  assert.equal(reloaded.version, 3);
+  assert.notEqual(selected.id, item.id);
+  assert.deepEqual(selected.editorial, origin);
+  assert.equal(selected.body, "Edited wording");
+  assert.ok(!renderText(selected).includes(origin.pitch_id));
+  assert.throws(() => validateBackup({...incoming, version: 2}));
+  for (const bad of [{stream: "unknown"}, {pitch_id: "?"}, {as_of: "yesterday"}, {replay: "1"}, {extra: 0}]) {
+    assert.throws(() => newDraft({editorial: {...origin, ...bad}}));
+  }
+});
+
 test("quota and validation failures preserve saved bytes and acknowledged memory", () => {
   const initial = backup(), disk = storage(JSON.stringify(initial)), store = createStore(disk);
   const before = disk.raw();
